@@ -1,0 +1,63 @@
+; U5 — main firmware, origin 0x2000
+; U4's cold start jumps here at 0x243D. Quick-SET-UP banner at 0x23DF anchors
+; the surrounding region.
+
+main_entry:             equ 0x243d      ; target of cold-start JP from U4:0x000B
+handler_jump_table:     equ 0x20aa      ; 132 × 2-byte master dispatch table
+noop_handler:           equ 0x2798      ; single RET — unimplemented commands
+
+; Selected handlers confirmed against VT52 commands (see emulation_codes.md)
+h_vt52_esc_Y_cursor:    equ 0x3523      ; idx 0x0C — row/col cursor address
+h_vt52_esc_A_up:        equ 0x2f65      ; idx 0x3C
+h_vt52_esc_B_down:      equ 0x2f61      ; idx 0x3D
+h_vt52_esc_C_right:     equ 0x2f54      ; idx 0x4D
+h_vt52_esc_D_left:      equ 0x2f59      ; idx 0x52
+h_vt52_esc_H_home:      equ 0x33af      ; idx 0x3E
+h_vt52_esc_F_gfx_on:    equ 0x28ed      ; idx 0x3A
+h_vt52_esc_G_gfx_off:   equ 0x2903      ; idx 0x3B
+h_vt52_esc_Z_identify:  equ 0x2a0f      ; idx 0x6B
+h_set_cursor_row_5bit:  equ 0x34cb      ; idx 0x16 — ESC [ <row>
+h_set_cursor_col_bcd:   equ 0x34b3      ; idx 0x17 — ESC ] <col>
+h_cursor_addr_4coord:   equ 0x2250      ; idx 0x03 — 4-byte cursor/region
+esc_M_subdispatch_tbl:  equ 0x21dc      ; jump table for ESC M <letter>
+
+; --- Additional classified handlers (session 2) -------------------------------
+h_region_2coords:       equ 0x2799      ; idx 0x0E — 2-position param reader
+h_cursor_addr_alt:      equ 0x3519      ; idx 0x0F — alt cursor address
+h_3byte_cmd_bit0:       equ 0x27dc      ; idx 0x10
+h_cursor_addr_ampex:    equ 0x27eb      ; idx 0x11
+h_digit_sel_attr:       equ 0x280c      ; idx 0x1A — hex-digit attribute select
+h_param_cp_31:          equ 0x285e      ; idx 0x1D
+h_subdispatch_HF:       equ 0x28bb      ; idx 0x1F
+h_param_minus_20:       equ 0x28c7      ; idx 0x20 — VT52 ESC {
+h_bit0_dispatch:        equ 0x28ce      ; idx 0x21
+h_subdispatch_12:       equ 0x28d7      ; idx 0x22
+h_set_ab2f:             equ 0x28e3      ; idx 0x23
+h_set_abed:             equ 0x28e8      ; idx 0x24
+h_tab_set_bit2:         equ 0x2934      ; idx 0x5B
+h_tab_set_bit0:         equ 0x293d      ; idx 0x5C
+h_tab_set_bit3:         equ 0x2941      ; idx 0x5D
+h_tab_clr_bits:         equ 0x2945      ; idx 0x5E
+h_tab_set_bit1:         equ 0x2949      ; idx 0x5F
+h_tab_clr_bit1:         equ 0x294d      ; idx 0x60
+h_tab_clr_bit3:         equ 0x2951      ; idx 0x66
+h_reverse_lf:           equ 0x2957      ; idx 0x6E — AMPEX ESC I
+h_page_counter_op:      equ 0x2a39      ; idx 0x32
+h_prot_on:              equ 0x33e4      ; idx 0x59 — AMPEX ESC &
+h_mode_bit7_test:       equ 0x340c      ; idx 0x42 — AMPEX ESC I
+h_attr_reset:           equ 0x2737      ; idx 0x4C — AMPEX ESC z
+h_invoke_cursor_apply:  equ 0x2924      ; idx 0x49 — AMPEX ESC N
+ram_tab_flags:          equ 0xac18      ; tab/mode register toggled by 0x2934..
+ram_attr_subsel:        equ 0xac19      ; hex-digit attribute selector
+attr_table:             equ 0x2ee2      ; 16-byte table indexed by ESC G digit
+quicksetup_banner:      equ 0x23df      ; "C=1=HDX 2=SILENT 3=BELL-OFF ..."
+tv950_xlate_base:       equ 0x2014      ; 96-byte TV950 base translation table
+
+; RAM
+ram_xlate_table:        equ 0xa983
+ram_esc_byte:           equ 0xaa23
+ram_esc_state:          equ 0xaa25
+ram_mode_flags:         equ 0xaa29
+ram_leadin_byte:        equ 0xaa99
+ram_setup_flags_b9:     equ 0xaab9
+ram_setup_emul_bb:      equ 0xaabb

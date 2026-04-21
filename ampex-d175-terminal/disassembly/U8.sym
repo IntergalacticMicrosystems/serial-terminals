@@ -1,0 +1,9 @@
+; U8 — Star Technologies overlay, origin 0xB000
+;
+; Entry JR at 0xB000 → 0xB030. Immediately after entry is an 8-slot jump
+; table of C3 xx xx (JP absolute) entries at 0xB009..0xB020.
+
+overlay_entry:          equ 0xb000      ; JR +0x2E to overlay_init
+jumptable_start:        equ 0xb009      ; 8× JP absolute; dispatch-style
+overlay_init:           equ 0xb030      ; landing of the entry JR
+star_version_string:    equ 0xb6e5      ; "Version No. 63.3 Copyright (C) 1983 Star Technologies, Inc."

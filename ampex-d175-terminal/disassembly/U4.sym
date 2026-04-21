@@ -1,0 +1,171 @@
+; U4 — boot / primary ROM, origin 0x0000
+; Labels below are seeded from Phase 1 (reset vector, RST table, cold-start
+; target) and from ground-truth string matches. z80dasm auto-labels the rest.
+;
+; Format: `name: equ 0xNNNN`
+
+; --- CPU-fixed entry points ---------------------------------------------------
+reset_vector:           equ 0x0000      ; DI ; IM 1 ; LD IX,3030h ; JP main_entry
+cold_start_jp:          equ 0x000b      ; JP to main_entry (0x243D in U5)
+rst08_handler:          equ 0x0008
+rst10_handler:          equ 0x0010
+rst18_handler:          equ 0x0018
+rst20_handler:          equ 0x0020
+rst28_handler:          equ 0x0028
+rst30_handler:          equ 0x0030
+rst38_handler:          equ 0x0038
+nmi_vector:             equ 0x0066
+
+; --- String / table anchors (ground-truth from Phase 1) -----------------------
+; The table at 0x08B7 is a concatenation of fixed-width tokens. Each entry below
+; is one column the firmware loads by offset. Widths inferred from layout.
+tbl_duplex:             equ 0x08b7      ; "HDX" "FDX" "LCL" "BLK" (3 chars each)
+tbl_click_silent:       equ 0x08c3      ; "CLICK"  "SILENT"
+tbl_on_off:             equ 0x08ce      ; "ON "  "OFF"
+tbl_nor_rev:            equ 0x08d4      ; "NOR" "REV"
+tbl_loc_edupe:          equ 0x08da      ; "LOC" "EDUPE"
+tbl_baud_strings:       equ 0x08e2      ; "9600" "  50" "  75" ... "19.2"
+str_setup_menu:         equ 0x0922      ; "SET-UP MENU"
+str_copyright:          equ 0x092d      ; "COPYRIGHT 1983=AMPEX CORP="
+
+; Status-line vocabulary (0x0E67). Each token is typically 3–4 chars; offsets
+; below are first-pass guesses to be refined by tracing the loader.
+tbl_status_vocab:       equ 0x0e67      ; "XMIT" "WPT" "ATB" "FLP" "EPG" ...
+str_time_prefix:        equ 0x0e8b      ; "TIME: "  etc. embedded in same blob
+str_par_ovr:            equ 0x0e97      ; "PAR OVR FRA DWLD"
+str_mode:               equ 0x0ead      ; "MODE" "PROG" "CURS" "PROT"
+str_err_comp:           equ 0x0ebe      ; "BAD COMP:OPER ERR:COMM ERR:"
+str_err_rom:            equ 0x0edd      ; "ROM   DISRAMDATRAMCMORAM"
+
+; Character-substitution / graphics tables
+tbl_gfx_chars_big:      equ 0x1023      ; bulk graphics char substitution table
+tbl_gfx_chars_small:    equ 0x1091      ; short graphics char table
+
+; --- Ring-buffer primitives (open-items pass findings) -----------------------
+master_dispatcher:      equ 0x0aaf      ; tbl[cmd] -> jump table at U5:0x20AA
+ring_get_next:          equ 0x159c      ; RST 28 body — blocking get from 0xA800
+ring_put_data:          equ 0x17b6      ; enqueue data byte from C (no bit-7 flag)
+ring_put_esc:           equ 0x13af      ; enqueue from ram_esc_byte (command has bit 7 set)
+tx_enqueue:             equ 0x1540      ; enqueue C to UART TX queue at 0xA900
+tx_drain_loop:          equ 0x1319      ; drainer: expands bit-7 bytes with lead-in
+uart_rx_isr_body:       equ 0x1387      ; called from RST 38 handler
+crtc_write_cursor:      equ 0x1768      ; wait-ready + write DE to 0xC000/0xD000
+crtc_upper_config:      equ 0x05cb      ; reads 0xAABB[7:4], indexes 0x029C, OUTIs
+crtc_config_table:      equ 0x029c      ; 16 × 2-byte CRTC register pairs
+
+ram_tx_queue:           equ 0xa900      ; 32-byte TX ring (to UART)
+ram_tx_tail:            equ 0xa946      ; TX queue tail (mod 32 via 1fh)
+ram_rx_queue:           equ 0xa930      ; 16-byte UART RX ring
+ram_rx_head:            equ 0xa948
+ram_rx_tail:            equ 0xa949
+ram_kb_head:            equ 0xa94a
+ram_kb_tail:            equ 0xa94b
+ram_local_ring:         equ 0xa800      ; 256-byte local-echo ring
+ram_local_tail:         equ 0xa944
+ram_local_head:         equ 0xa945
+
+emul_switcher:          equ 0x1980      ; writes new emul index into 0xAABB low nibble
+emul_switcher_entry:    equ 0x1972      ; handler idx 0x1B (ESC 8 <n>)
+
+; --- Classified action handlers in U4 -----------------------------------------
+h_set_time:             equ 0x18b4      ; idx 0x04 — ESC } HH:MM
+h_set_bcd_date:         equ 0x18fa      ; idx 0x07 — 2-digit BCD set
+h_emit_graphic_letter:  equ 0x1914      ; idx 0x15 — AMPEX ESC G <letter>
+h_esc_M_subdispatch:    equ 0x1920      ; idx 0x18 — indirect via U5:0x21DC
+h_attr_set_55:          equ 0x1a3b      ; idx 0x40 — ESC # attribute (flag=FF)
+h_attr_set_56:          equ 0x1a48      ; idx 0x41 — ESC " attribute (flag=00)
+h_mode_off_pair:        equ 0x0aab      ; idx 0x72 — ESC 2 (C=00 variant)
+h_mode_on_pair:         equ 0x0aa7      ; sibling of above (C=FF variant)
+h_cursor_report:        equ 0x09f1      ; idx 0x76 — ESC ? (send ESC row col)
+h_clear_mode7:          equ 0x09e0      ; idx 0x78 — ESC ' clear mode-flag bit 7
+attr_apply:             equ 0x1475      ; called by attribute handlers with C=attr
+
+; --- Ampex display-mode toggles (ESC j/k/l/m/n/o/p/q on byte at 0xABD0) ------
+; Paired set/clear handlers around 0x1C73..0x1CAE. Each pair toggles one bit
+; of the Ampex "display-mode register" at RAM 0xABD0.
+set_displaymode_bit:    equ 0x1c83      ; OR C into 0xABD0
+clr_displaymode_bit:    equ 0x1c91      ; AND-NOT C into 0xABD0
+h_esc_j_set_bit3:       equ 0x1c73      ; ESC j
+h_esc_k_clr_bit3:       equ 0x1c8a      ; ESC k
+h_esc_l_set_bit1:       equ 0x1c99      ; ESC l
+h_esc_m_clr_bit1:       equ 0x1c9d      ; ESC m
+h_esc_n_set_bit2:       equ 0x1ca1      ; ESC n
+h_esc_o_clr_bit2:       equ 0x1ca5      ; ESC o
+h_esc_p_set_bit0:       equ 0x1ca9      ; ESC p
+h_esc_q_clr_bit0:       equ 0x1cad      ; ESC q
+ram_displaymode:        equ 0xabd0      ; Ampex display-mode register
+
+; --- Additional classified handlers (session 2) -------------------------------
+noop_handler_u4:        equ 0x19a6      ; single RET, idx 0x1E
+h_write_with_attr:      equ 0x19a7      ; idx 0x27 — emit byte with attribute
+h_set_flag_abd2:        equ 0x19b0      ; idx 0x2C — AMPEX ESC O
+h_read_char_at_cursor:  equ 0x19b6      ; idx 0x2D — send char under cursor + CR
+h_tx_letter_N:          equ 0x19c2      ; idx 0x2E — VT52 ESC =
+h_tx_letter_O:          equ 0x19c7      ; idx 0x2F — VT52 ESC >
+h_toggle_ab2c:          equ 0x19cb      ; idx 0x30 — XOR 0xFF at 0xAB2C
+h_conditional_1276:     equ 0x19d4      ; idx 0x33 — AMPEX ESC P
+h_line_insert:          equ 0x19dc      ; idx 0x34 — AMPEX ESC R
+h_prev_page:            equ 0x19e4      ; idx 0x35 — AMPEX ESC J
+h_tx_literal:           equ 0x1a0a      ; idx 0x38
+h_set_aa2e_bit6:        equ 0x1a21      ; idx 0x39
+h_mode_off_abdd:        equ 0x1a2d      ; idx 0x3F
+h_screen_mode_0:        equ 0x1a75      ; idx 0x45 — triplet
+h_screen_mode_1:        equ 0x1a7d      ; idx 0x46 — triplet
+h_screen_mode_2:        equ 0x1a83      ; idx 0x47 — triplet
+h_cursor_right_or_ins:  equ 0x1a89      ; idx 0x48
+h_aa2e_or_abd0:         equ 0x1a4d      ; idx 0x44
+h_scroll_mode_c2:       equ 0x1af6      ; idx 0x4E — AMPEX ESC @
+h_clr_aa2a_bit2:        equ 0x1afe      ; idx 0x50
+h_set_aa2a_bit2:        equ 0x1b05      ; idx 0x51
+h_mode_on_abdd:         equ 0x1b1b      ; idx 0x54
+h_call_1d4e_c3:         equ 0x1b24      ; idx 0x56
+h_tx_aa8b_mode:         equ 0x1b2a      ; idx 0x5A
+h_set_aa2a_bit3:        equ 0x1b37      ; idx 0x61
+h_clr_aa2a_bit3:        equ 0x1b42      ; idx 0x62
+h_dual_action_set:      equ 0x1b72      ; idx 0x63 — AMPEX ESC )
+h_dual_action_clr:      equ 0x1b97      ; idx 0x6F — AMPEX ESC (
+h_mode_a_check:         equ 0x1bbc      ; idx 0x70 — AMPEX ESC A (CPP)
+h_mode_conditional:     equ 0x1bd0      ; idx 0x73 — AMPEX ESC a
+h_setup_flag_tx:        equ 0x1d44      ; idx 0x57 — AMPEX ESC C
+h_cpp_extended:         equ 0x0a08      ; idx 0x4B — extended cursor-pos response
+h_cpp_multipage:        equ 0x0a1d      ; idx 0x64 — multi-page CPP
+h_ampex_esc_1_sib:      equ 0x0aa7      ; sibling of 0x0AAB (AMPEX ESC 1)
+h_displaymode_read:     equ 0x192c      ; idx 0x19
+h_clr_mode_nibble:      equ 0x1bd0      ; idx 0x73 — AMPEX ESC a
+h_abdd_pair_off:        equ 0x1bdf      ; idx 0x74
+h_abdd_pair_on:         equ 0x1be3      ; idx 0x75
+h_clr_aa2a_bit2_E:      equ 0x1c6b      ; idx 0x77 — AMPEX ESC E
+
+; --- ESC-sequence subsystem (Phase 3 findings) -------------------------------
+set_leadin_byte:        equ 0x058e      ; picks 0x1B or 0x7E into RAM 0xAA99
+emul_table_loader:      equ 0x0381      ; on SET-UP change, rebuilds RAM 0xA983
+clear_xlate_table:      equ 0x0428      ; zero 32 bytes at RAM 0xA983
+apply_patch_record:     equ 0x040d      ; applies (off,val) pairs from ROM
+resolve_patch_ptr:      equ 0x041f      ; index pointer table by A
+xlate_base_emul_0_6:    equ 0x1dee      ; 96-byte base table, emuls 0..6
+xlate_aux_emul_0_7:     equ 0x1d61      ; 32-byte aux table, emuls 0..7
+xlate_aux_emul_8_10:    equ 0x1dcb      ; 32-byte aux table, emuls 8..10
+xlate_base_emul_8_10:   equ 0x1f1e      ; 128-byte base table, emuls 8..10
+patch_ptrs_emul_0_6:    equ 0x0433      ; pointer table, first-pass patches
+patch_ptrs_emul_1_6:    equ 0x0445      ; pointer table, second-pass patches
+patch_ptrs_emul_9_10:   equ 0x0441      ; pointer table, 3rd-base patches
+esc_leadin_detector:    equ 0x187a      ; CP (HL) against RAM 0xAA99
+
+; --- Cross-ROM references ----------------------------------------------------
+main_entry_in_u5:       equ 0x243d
+esc_state_machine:      equ 0x4a10      ; in U6 — called from esc_leadin_detector
+
+; --- RAM map (observed) ------------------------------------------------------
+ram_param_stash:        equ 0xa94c      ; 6 bytes — ESC sequence parameter buffer
+ram_xlate_table:        equ 0xa983      ; 160 bytes — ESC-cmd translation table
+ram_esc_byte:           equ 0xaa23      ; current ESC input byte
+ram_esc_state:          equ 0xaa25      ; ESC state counter (0, 0xFF, 1..5)
+ram_esc_arity:          equ 0xaa26      ; saved arity
+ram_mode_flags:         equ 0xaa29      ; terminal mode flags (central state byte)
+ram_leadin_byte:        equ 0xaa99      ; current lead-in (0x1B or 0x7E)
+ram_setup_flags_b9:     equ 0xaab9      ; SET-UP flags (bit 7 = TILDE lead-in)
+ram_setup_emul_bb:      equ 0xaabb      ; low nibble = emulation index 0..10
+ram_stack_top:          equ 0xae1e      ; SP initialized here
+
+; --- I/O (memory-mapped) -----------------------------------------------------
+io_uart_primary:        equ 0x8001      ; 8251A UART data/status

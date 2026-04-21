@@ -4,6 +4,9 @@ Sends ESC F (enter graphics mode), then every byte 0x20..0x6E separated by
 spaces, 16 per line, wrapped with CR+LF, then ESC G (exit graphics mode).
 Use this to see which glyph each code prints when the D-175 is in VT52
 emulation mode with graphics mode active.
+
+CPython-only utility — uses argparse and pyserial directly, not the
+compat shim that the main game runs through.
 """
 
 import argparse

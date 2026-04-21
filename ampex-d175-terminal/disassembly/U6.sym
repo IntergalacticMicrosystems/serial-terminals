@@ -1,0 +1,67 @@
+; U6 — SET-UP menu driver + text, origin 0x4000
+;
+; Key anchors from Phase 1:
+;   0x4A9F — SET-UP menu text (736 bytes, `*`-delimited lines, `.`-delimited values)
+;   0x4F00 — version string "AMPEX D175 TERMINAL V 3.5"
+;
+; The menu text encoding: line N (A..V) starts at a fixed offset; each line
+; reads "<letter> <name> :<val0>.<val1>.<val2>...*". The renderer at
+; 0x400A does an LDIR block-copy driven by pointers in RAM 0xAC03/0xAC07 —
+; those RAM slots act as (dst, len) for the current copy; source at 0x4A9F+off.
+
+copy_menu_block:        equ 0x400a      ; LD HL,4AC4Fh ; ... LDIR ; RET
+setup_menu_text:        equ 0x4a9f      ; 736-byte menu text blob
+version_string:         equ 0x4f00      ; "AMPEX D175 TERMINAL  V 3.5=!"
+
+; Observed RAM pointers consumed by copy_menu_block (documented here, not in
+; ROM — kept in sym so cross-refs show up on disassembly):
+ram_copy_dst:           equ 0xac03      ; caller puts DE (destination) here
+ram_copy_len:           equ 0xac07      ; caller puts length-1 here
+
+; --- ESC state machine (Phase 3 findings) ------------------------------------
+display_dispatcher:     equ 0x4981      ; consumes ring byte; bit-7 → U4:master_dispatcher
+display_main_loop:      equ 0x4960      ; drains 0xA800 ring, calls display_dispatcher
+video_ram_write:        equ 0x15f7      ; (in U4) - writes byte to 0xC000/0xD000
+
+; ESC action handlers in U6 (verified via jump-table resolution)
+h_erase_to_eol:         equ 0x43cb      ; idx 0x81 — Ampex/VT52 ESC t
+h_erase_to_end_screen:  equ 0x4445      ; idx 0x37 — Ampex ESC Y, VT52 ESC J
+h_erase_eol_unprot:     equ 0x43d5      ; idx 0x36 — VT52 ESC K, Ampex ESC T (unprotected fill)
+erase_body_common:      equ 0x43d8      ; shared tail of 0x43CB and 0x43D5
+
+; --- Additional classified handlers (session 2) -------------------------------
+h_erase_var_1:          equ 0x446f      ; idx 0x29
+h_erase_fill_var:       equ 0x4588      ; idx 0x2A
+h_attr_bit7_set:        equ 0x44e8      ; idx 0x2B — AMPEX ESC +
+h_erase_82:             equ 0x4465      ; idx 0x82
+h_erase_83:             equ 0x44b0      ; idx 0x83
+h_ampex_esc_0:          equ 0x46ce      ; idx 0x31
+h_ampex_esc_X:          equ 0x46d5      ; idx 0x65
+h_ampex_esc_F:          equ 0x4714      ; idx 0x67
+h_ampex_esc_C:          equ 0x452e      ; idx 0x43
+h_ampex_esc_i:          equ 0x462a      ; idx 0x4F
+h_save_cursor:          equ 0x4645      ; idx 0x4A — AMPEX ESC 1
+h_mode_48e_star:        equ 0x448e      ; idx 0x6D — AMPEX/VT52 ESC *
+h_setup_erase_cond:     equ 0x4588      ; idx 0x2A — conditional + Star hook
+h_swap_f8_f9:           equ 0x4714      ; idx 0x67 — AMPEX ESC F / VT52 ESC .
+h_erase_full_page:      equ 0x4465      ; idx 0x82
+
+esc_state_machine:      equ 0x4a10      ; called from U4:0x1891 on every char
+;                                         while in ESC mode. Branches on
+;                                         RAM[ram_esc_state]:
+;                                           0    -> fresh lead-in, set 0xFF
+;                                           0xFF -> command byte, lookup arity
+;                                           else -> collecting params
+xlate_table_lookup:     equ 0x4a37      ; LD HL,0A983h ; ADD HL,BC ; LD A,(HL)
+arity_classifier:       equ 0x4a42      ; maps table value -> state counter
+
+; RAM
+ram_param_stash:        equ 0xa94c
+ram_xlate_table:        equ 0xa983
+ram_esc_byte:           equ 0xaa23
+ram_esc_state:          equ 0xaa25
+ram_esc_arity:          equ 0xaa26
+ram_mode_flags:         equ 0xaa29
+ram_leadin_byte:        equ 0xaa99
+ram_setup_flags_b9:     equ 0xaab9
+ram_setup_emul_bb:      equ 0xaabb
