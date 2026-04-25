@@ -272,7 +272,7 @@ l011bh:
 	ld a,06fh		;0184	3e 6f 	> o 
 	call sub_15ddh		;0186	cd dd 15 	. . . 
 	ld c,04fh		;0189	0e 4f 	. O 
-	call attr_apply		;018b	cd 75 14 	. u . 
+	call aux_ring_enq		;018b	cd 75 14 	. u . 
 	ld a,018h		;018e	3e 18 	> . 
 	ld (0ac1dh),a		;0190	32 1d ac 	2 . . 
 	ld b,05ch		;0193	06 5c 	. \ 
@@ -817,7 +817,7 @@ sub_0516h:
 	inc a			;051f	3c 	< 
 l0520h:
 	ld c,a			;0520	4f 	O 
-	jp attr_apply		;0521	c3 75 14 	. u . 
+	jp aux_ring_enq		;0521	c3 75 14 	. u . 
 sub_0524h:
 	ld a,(ram_setup_flags_b9)		;0524	3a b9 aa 	: . . 
 	and 003h		;0527	e6 03 	. . 
@@ -2085,7 +2085,7 @@ sub_0d00h:
 	ld (0acc6h),a		;0d17	32 c6 ac 	2 . . 
 	call 0297ah		;0d1a	cd 7a 29 	. z ) 
 	ld c,050h		;0d1d	0e 50 	. P 
-	jp attr_apply		;0d1f	c3 75 14 	. u . 
+	jp aux_ring_enq		;0d1f	c3 75 14 	. u . 
 l0d22h:
 	bit 7,(hl)		;0d22	cb 7e 	. ~ 
 	ld (hl),000h		;0d24	36 00 	6 . 
@@ -2096,7 +2096,7 @@ l0d22h:
 	ld a,029h		;0d2e	3e 29 	> ) 
 	ld (06001h),a		;0d30	32 01 60 	2 . ` 
 	ld c,051h		;0d33	0e 51 	. Q 
-	jp attr_apply		;0d35	c3 75 14 	. u . 
+	jp aux_ring_enq		;0d35	c3 75 14 	. u . 
 sub_0d38h:
 	res 7,d		;0d38	cb ba 	. . 
 	ld a,e			;0d3a	7b 	{ 
@@ -3036,7 +3036,7 @@ l1305h:
 	ret z			;1311	c8 	. 
 	xor a			;1312	af 	. 
 	ld (0abf7h),a		;1313	32 f7 ab 	2 . . 
-	jp h_attr_set_56		;1316	c3 48 1a 	. H . 
+	jp h_aux_enq_56		;1316	c3 48 1a 	. H . 
 tx_drain_loop:
 	ld a,(ram_local_head)		;1319	3a 45 a9 	: E . 
 	ld hl,ram_local_tail		;131c	21 44 a9 	! D . 
@@ -3238,7 +3238,7 @@ l143dh:
 	ld (0ac47h),a		;1470	32 47 ac 	2 G . 
 	ei			;1473	fb 	. 
 	ret			;1474	c9 	. 
-attr_apply:
+aux_ring_enq:
 	ld a,(0aaa3h)		;1475	3a a3 aa 	: . . 
 	inc a			;1478	3c 	< 
 	and 007h		;1479	e6 07 	. . 
@@ -3793,14 +3793,14 @@ l1830h:
 	ld a,041h		;1830	3e 41 	> A 
 	add a,b			;1832	80 	. 
 	ld c,a			;1833	4f 	O 
-	call attr_apply		;1834	cd 75 14 	. u . 
+	call aux_ring_enq		;1834	cd 75 14 	. u . 
 	ld a,(0abc7h)		;1837	3a c7 ab 	: . . 
 	and a			;183a	a7 	. 
 	ld c,055h		;183b	0e 55 	. U 
 	jr nz,l1840h		;183d	20 01 	  . 
 	inc c			;183f	0c 	. 
 l1840h:
-	call attr_apply		;1840	cd 75 14 	. u . 
+	call aux_ring_enq		;1840	cd 75 14 	. u . 
 	call sub_0516h		;1843	cd 16 05 	. . . 
 	xor a			;1846	af 	. 
 	ld (0aab5h),a		;1847	32 b5 aa 	2 . . 
@@ -4034,7 +4034,7 @@ h_read_char_at_cursor:
 h_tx_letter_N:
 	ld c,04eh		;19c2	0e 4e 	. N 
 l19c4h:
-	jp attr_apply		;19c4	c3 75 14 	. u . 
+	jp aux_ring_enq		;19c4	c3 75 14 	. u . 
 h_tx_letter_O:
 	ld c,04fh		;19c7	0e 4f 	. O 
 	jr l19c4h		;19c9	18 f9 	. . 
@@ -4070,7 +4070,7 @@ l19e9h:
 	call sub_1a3dh		;1a00	cd 3d 1a 	. = . 
 	ld a,(0abd5h)		;1a03	3a d5 ab 	: . . 
 	ld c,a			;1a06	4f 	O 
-	jp attr_apply		;1a07	c3 75 14 	. u . 
+	jp aux_ring_enq		;1a07	c3 75 14 	. u . 
 h_tx_literal:
 	ld a,(ram_mode_flags)		;1a0a	3a 29 aa 	: ) . 
 	ld b,a			;1a0d	47 	G 
@@ -4098,15 +4098,15 @@ l1a2fh:
 	ld a,c			;1a34	79 	y 
 	ld (0abd3h),a		;1a35	32 d3 ab 	2 . . 
 	jp l12d1h		;1a38	c3 d1 12 	. . . 
-h_attr_set_55:
+h_aux_enq_55:
 	ld c,055h		;1a3b	0e 55 	. U 
 sub_1a3dh:
 	ld a,0ffh		;1a3d	3e ff 	> . 
 l1a3fh:
 	ld (0abc7h),a		;1a3f	32 c7 ab 	2 . . 
-	call attr_apply		;1a42	cd 75 14 	. u . 
+	call aux_ring_enq		;1a42	cd 75 14 	. u . 
 	jp l0f7fh		;1a45	c3 7f 0f 	.  . 
-h_attr_set_56:
+h_aux_enq_56:
 	ld c,056h		;1a48	0e 56 	. V 
 	xor a			;1a4a	af 	. 
 	jr l1a3fh		;1a4b	18 f2 	. . 
@@ -4474,7 +4474,7 @@ sub_1cc3h:
 	set 2,(hl)		;1cd2	cb d6 	. . 
 	ld c,059h		;1cd4	0e 59 	. Y 
 l1cd6h:
-	jp attr_apply		;1cd6	c3 75 14 	. u . 
+	jp aux_ring_enq		;1cd6	c3 75 14 	. u . 
 	ld hl,ram_setup_flags_b9		;1cd9	21 b9 aa 	! . . 
 	res 2,(hl)		;1cdc	cb 96 	. . 
 	ld c,058h		;1cde	0e 58 	. X 
@@ -4507,7 +4507,7 @@ l1ceeh:
 	res 3,(hl)		;1d16	cb 9e 	. . 
 	ret			;1d18	c9 	. 
 	call sub_0cdeh		;1d19	cd de 0c 	. . . 
-	jp h_attr_set_56		;1d1c	c3 48 1a 	. H . 
+	jp h_aux_enq_56		;1d1c	c3 48 1a 	. H . 
 	ld hl,0ac3bh		;1d1f	21 3b ac 	! ; . 
 	set 3,(hl)		;1d22	cb de 	. . 
 	ld a,(hl)			;1d24	7e 	~ 

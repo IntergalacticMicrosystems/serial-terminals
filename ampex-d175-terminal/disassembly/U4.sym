@@ -72,13 +72,13 @@ h_set_time:             equ 0x18b4      ; idx 0x04 — ESC } HH:MM
 h_set_bcd_date:         equ 0x18fa      ; idx 0x07 — 2-digit BCD set
 h_emit_graphic_letter:  equ 0x1914      ; idx 0x15 — AMPEX ESC G <letter>
 h_esc_M_subdispatch:    equ 0x1920      ; idx 0x18 — indirect via U5:0x21DC
-h_attr_set_55:          equ 0x1a3b      ; idx 0x40 — ESC # attribute (flag=FF)
-h_attr_set_56:          equ 0x1a48      ; idx 0x41 — ESC " attribute (flag=00)
+h_aux_enq_55:           equ 0x1a3b      ; idx 0x40 — ESC #: enqueue 0x55 to aux ring, flag 0xABC7=FF (role TBD — ring feeds I/O 0x9000/0x9001, not CRTC)
+h_aux_enq_56:           equ 0x1a48      ; idx 0x41 — ESC ": enqueue 0x56 to aux ring, flag 0xABC7=00
 h_mode_off_pair:        equ 0x0aab      ; idx 0x72 — ESC 2 (C=00 variant)
 h_mode_on_pair:         equ 0x0aa7      ; sibling of above (C=FF variant)
 h_cursor_report:        equ 0x09f1      ; idx 0x76 — ESC ? (send ESC row col)
 h_clear_mode7:          equ 0x09e0      ; idx 0x78 — ESC ' clear mode-flag bit 7
-attr_apply:             equ 0x1475      ; called by attribute handlers with C=attr
+aux_ring_enq:           equ 0x1475      ; enqueue C to 8-slot ring at 0xAC3D (head 0xAAA3, tail 0xAAA4); drained by sub_1435h to mem-mapped I/O 0x9000/0x9001. (Formerly mislabelled "attr_apply" — ring does not feed CRTC attribute RAM.)
 
 ; --- Ampex display-mode toggles (ESC j/k/l/m/n/o/p/q on byte at 0xABD0) ------
 ; Paired set/clear handlers around 0x1C73..0x1CAE. Each pair toggles one bit

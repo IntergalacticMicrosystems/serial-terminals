@@ -1,0 +1,8 @@
+build/
+build-win/
+third_party/
+*.tmp.*
+*.o
+*.d
+*.exe
+*.dll

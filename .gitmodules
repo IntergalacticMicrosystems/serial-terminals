@@ -1,0 +1,3 @@
+[submodule "ampex-d175-terminal/trs80-serial/vendor/sdltrs"]
+	path = ampex-d175-terminal/trs80-serial/vendor/sdltrs
+	url = https://gitlab.com/jengun/sdltrs.git

@@ -71,13 +71,39 @@ different `E` pre-sets (controlling fill-char semantics).
 
 | idx | ar | handler | role / command |
 |---|---|---|---|
-| `0x40` | 1 | `U4:0x1A3B` | **Attribute set 0x55** with flag `0xABC7=0xFF`. AMPEX `ESC #`. |
-| `0x41` | 1 | `U4:0x1A48` | **Attribute set 0x56** with flag `0xABC7=0x00`. AMPEX `ESC "`. |
+| `0x40` | 1 | `U4:0x1A3B` | Enqueue byte `0x55` to 8-slot ring at `0xAC3D` + set flag `0xABC7=0xFF` (via `attr_apply`). Ring is drained by `U4:sub_1435` to memory-mapped I/O at `0x9000`/`0x9001` — **not** CRTC attribute RAM. AMPEX `ESC #`. Role unconfirmed; **not** a video-attribute change. |
+| `0x41` | 1 | `U4:0x1A48` | Same structure as `0x40` but enqueues `0x56`, flag `0xABC7=0x00`. AMPEX `ESC "`. Not a video-attribute change. |
 | `0x3A` | 1 | `U5:0x28ED` | **Graphics mode ON** (AMPEX `ESC $`, VT52 `ESC F`). |
 | `0x3B` | 1 | `U5:0x2903` | **Graphics mode OFF** (AMPEX `ESC %`, VT52 `ESC G`). |
 | `0x15` | 2 | `U4:0x1914` | **Emit graphic glyph by letter** (AMPEX `ESC G <A..O>`). |
-| `0x1A` | 2 | `U5:0x280C` | **Select attribute by hex digit** (AMPEX `ESC G <0..F>` per table at `0x2EE2`). |
-| `0x6D` | 1 | `U6:0x448E` | Attribute-set handler. AMPEX/VT52 `ESC *`. |
+| `0x1A` | 2 | `U5:0x280C` | **Select attribute by hex digit** — reads 1 byte, subtracts `'0'`, rejects values ≥ `0x10`, indexes 16-entry permutation table at `U5:0x2EE2`, stores 4-bit result (blank/underline/flash/reverse) to `0xAC19`. Reached by **TV950** `ESC G <0..?>` (Emulation 7). The 230+-manual range `ESC G P..DEL` (adds half-intensity) is **silently rejected** by the `cp 010h ; ret nc` gate at `U5:0x2811`. Not reachable in AMPEX or VT52 modes. |
+| `0x6D` | 1 | `U6:0x448E` | **Page fill/erase** (not attribute-set): `sub_23cah` sets row counter to 23; branches on mode flags `0xAA2B & 0xC0`; falls through to shared fill body `l447bh` with `D=0, E=0x80` (hard-coded fill attribute). AMPEX/VT52 `ESC *`. |
+
+#### Half-intensity is not reachable via ESC sequences
+
+The CRTC attribute RAM at `0xD000` has 5 display-affecting bits (bit 0
+blank, bit 1 underline, bit 2 flash, bit 3 reverse, bit 4
+half-intensity; bit 7 no-char marker; bits 5/6 alt-charset / protect
+gate). Only the bit-4 half-intensity bit is *not* reachable from any
+ESC sequence in firmware v3.5:
+
+- Handler `0x1A` (the only path to `0xAC19` "current attribute for new
+  characters") masks input to `< 0x10` — so `0xAC19` can only hold
+  values with bit 4 clear.
+- The only code that writes bit 4 of `0xD000` is the pair
+  `U4:0x1ABE`/`U4:0x1AC3` (`or 0x10` / `and 0xEF`), reached only from
+  protected-field setup (`h_dual_action_set/clr` at `U4:0x1B72/0x1B97`)
+  and the set-up-screen field drawer. Neither is in the master jump
+  table; no ESC sequence lands there.
+- The bulk-rewrite loop at `U6:0x4776` masks existing cells with `0x90`
+  (preserve bit 7 + bit 4) before OR'ing `0xAC19`, confirming bit 4 is
+  a per-cell attribute — but it is only ever *preserved*, never *set*,
+  from ESC input.
+
+Half-intensity on the D175 is therefore reachable only by (a) the
+SET-UP screen and (b) the PROT.H.I. / PROT.BOTH protected-field
+attribute setting. The 230+ manual's `ESC G P..DEL` extension is
+silently ignored by firmware v3.5.
 
 ### Ampex display-mode toggles on `0xABD0`
 
@@ -230,7 +256,7 @@ mode triplet.
 | `0x6E` | 1 | `U5:0x2957` | Cursor-up with bounds check (AMPEX `ESC I` — reverse linefeed / cursor up). |
 | `0x29` | 1 | `U6:0x446F` | Paired with `0x44E8` family. |
 | `0x2A` | 1 | `U6:0x4588` | Fill / erase variant. |
-| `0x2B` | 1 | `U6:0x44E8` | **Attribute bit-7 set** on `0xAC28`. AMPEX `ESC +`. |
+| `0x2B` | 1 | `U6:0x44E8` | **Erase with (fill\|0x80)**: loads default-fill char from `0xAC28`, ORs `0x80`, runs erase body `l44b8h`. Does *not* modify `0xAC28`. AMPEX `ESC +`. |
 | `0x31` | 1 | `U6:0x46CE` | AMPEX `ESC 0`. |
 | `0x38` | 1 | `U4:0x1A0A` | Transmit literal char. |
 | `0x39` | 1 | `U4:0x1A21` | OR 0x40 into `0xAA2E`, clear mode-flag bit 5. |
