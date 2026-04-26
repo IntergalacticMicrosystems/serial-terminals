@@ -78,9 +78,6 @@ static unsigned char shadow[TRS_CELLS];
 static unsigned char dirty[TRS_CELLS];
 static int          dirty_any = 0;
 
-static unsigned char out_buf[4096];
-static int          out_len = 0;
-
 volatile int trs_ampex_quit_requested = 0;
 
 int text80x24 = 0;
@@ -122,6 +119,22 @@ static void short_sleep_ms(int ms)
 #endif
 }
 
+static void short_sleep_us(int us)
+{
+#ifdef _WIN32
+    /* Windows Sleep granularity is 1 ms; round up. */
+    Sleep((us + 999) / 1000);
+#else
+    struct timespec ts = { us / 1000000, (long)(us % 1000000) * 1000 };
+    nanosleep(&ts, NULL);
+#endif
+}
+
+/* Inter-byte pacing: sleep this long after every byte clocks out, on top
+ * of the natural 520 us bit-time at 19200 baud. Lets the terminal's
+ * firmware drain its input ring before we feed it the next char. */
+#define INTER_BYTE_SLEEP_US 400
+
 static int serial_write_chunk(const unsigned char *p, int n)
 {
 #ifdef _WIN32
@@ -160,33 +173,46 @@ static int serial_read_chunk(unsigned char *p, int n)
 #endif
 }
 
-static void out_flush(void)
+/* Drain everything in-flight: kernel TTY queue + UART FIFO must be empty
+ * before we return. With IXON, this also blocks while output is paused
+ * by an XOFF, so the next out_byte() will only proceed once the terminal
+ * has released us with XON. */
+static void serial_drain(void)
 {
-    int pos = 0;
-    while (pos < out_len) {
-        int n = serial_write_chunk(out_buf + pos, out_len - pos);
-        if (n > 0) {
-            pos += n;
-        } else if (n == 0) {
-            short_sleep_ms(2);
-        } else {
-            break;
-        }
-    }
-    out_len = 0;
+#ifdef _WIN32
+    FlushFileBuffers(serial_fd);
+#else
+    tcdrain(serial_fd);
+#endif
 }
 
+/* Send one byte and wait for it to physically clock onto the wire before
+ * returning. This keeps at most a single byte buffered anywhere below us
+ * so the terminal's XOFF can stop output within one byte instead of after
+ * a 4 KB backlog drains. */
 static void out_byte(unsigned char b)
 {
-    if (out_len >= (int)sizeof(out_buf))
-        out_flush();
-    out_buf[out_len++] = b;
+    for (;;) {
+        int n = serial_write_chunk(&b, 1);
+        if (n == 1)
+            break;
+        if (n < 0)
+            return;
+        short_sleep_ms(1);
+    }
+    serial_drain();
+    short_sleep_us(INTER_BYTE_SLEEP_US);
 }
 
 static void out_bytes(const unsigned char *p, int n)
 {
     for (int i = 0; i < n; i++)
         out_byte(p[i]);
+}
+
+static void out_flush(void)
+{
+    serial_drain();
 }
 
 static void out_cursor(int row, int col)
@@ -234,6 +260,9 @@ static int configure_com(const char *device)
                 path, (unsigned long)GetLastError());
         return -1;
     }
+
+    /* Shrink kernel output queue to 1 byte so XOFF stops us promptly. */
+    SetupComm(serial_fd, 4096, 1);
 
     DCB dcb;
     memset(&dcb, 0, sizeof(dcb));
@@ -374,26 +403,41 @@ void trs_ampex_clear_screen(void)
 
 int trs_ampex_draw_border(void)
 {
+    /* The Ampex's input buffer is roughly 64 bytes and its XOFF watermark
+     * is too close to full to save us, so we chunk long runs and pause
+     * between chunks to keep the buffer at most half full. */
+    const int BORDER_SLEEP_MS = 5;
+    const int BORDER_CHUNK    = 4;
+
     out_esc(GFX_ENTER);
 
     out_cursor(BORDER_ROW_TOP, BORDER_COL_LEFT);
     out_byte(BOX_TL);
-    for (int c = 0; c < TRS_COLS; c++)
+    for (int c = 0; c < TRS_COLS; c++) {
         out_byte(BOX_H);
+        if ((c + 1) % BORDER_CHUNK == 0)
+            short_sleep_ms(BORDER_SLEEP_MS);
+    }
     out_byte(BOX_TR);
+    short_sleep_ms(BORDER_SLEEP_MS);
 
     for (int r = 0; r < TRS_ROWS; r++) {
         out_cursor(OFFSET_ROW + r, BORDER_COL_LEFT);
         out_byte(BOX_V);
         out_cursor(OFFSET_ROW + r, BORDER_COL_RIGHT);
         out_byte(BOX_V);
+        short_sleep_ms(BORDER_SLEEP_MS);
     }
 
     out_cursor(BORDER_ROW_BOT, BORDER_COL_LEFT);
     out_byte(BOX_BL);
-    for (int c = 0; c < TRS_COLS; c++)
+    for (int c = 0; c < TRS_COLS; c++) {
         out_byte(BOX_H);
+        if ((c + 1) % BORDER_CHUNK == 0)
+            short_sleep_ms(BORDER_SLEEP_MS);
+    }
     out_byte(BOX_BR);
+    short_sleep_ms(BORDER_SLEEP_MS);
 
     out_esc(GFX_EXIT);
     out_flush();
@@ -637,6 +681,10 @@ static void record_press(int keysym)
 
 static void inject_key(int keysym)
 {
+    if (keydebug) {
+        fprintf(stderr, "  -> trs keysym 0x%x\n", keysym);
+        fflush(stderr);
+    }
     trs_xlate_keysym(keysym);
     record_press(keysym);
 }
@@ -1270,6 +1318,9 @@ void trs_ampex_poll_input(void)
             if (b == 'H' || b == 'h') {
                 if (menu_active) menu_cancel_sub();
                 else             menu_open();
+            } else if (b == 'I' || b == 'i') {
+                /* HELP+I -> TRS-80 CLEAR (sdltrs keysym 0x10a). */
+                inject_key(0x10a);
             }
             continue;
         }

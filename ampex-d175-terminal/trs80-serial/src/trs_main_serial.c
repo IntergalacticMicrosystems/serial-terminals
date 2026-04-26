@@ -192,8 +192,6 @@ int main(int argc, char *argv[])
 #endif
 
     trs_reset(1);
-    trs_ampex_clear_screen();
-    trs_ampex_draw_border();
     trs_screen_refresh();
 
     z80_run(1);
