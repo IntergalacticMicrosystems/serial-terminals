@@ -1,0 +1,79 @@
+; U22 — boot/primary code ROM (MM2708Q), base H'0800', 1 KB.
+;
+; Hand-curated symbol table for U22.asm. Format: AS "name: EQU H'NNNN'".
+; relabel.py substitutes these names for hex address references in the
+; unidasm output. .asm is regenerable; .sym is the source of truth.
+;
+; Confirmed labels (no VERIFY tag); remaining open-items still carry VERIFY.
+
+;------------------------------------------------------------------------------
+; Primary dispatch table (8 entries × 3 bytes each, all JMP)
+; Reached from U1's reset vector (`JMP H'0800'`). Index 0 is cold-boot init.
+;------------------------------------------------------------------------------
+dispatch_table:         EQU H'0800'                ; JMP H'0800' = entry 0 = boot_init
+dispatch_entry_1:       EQU H'0803'
+dispatch_entry_2:       EQU H'0806'
+dispatch_entry_3:       EQU H'0809'                ; calls U12:5FB and U12:624
+dispatch_entry_4:       EQU H'080C'
+dispatch_entry_5:       EQU H'080F'
+dispatch_entry_6:       EQU H'0812'
+dispatch_entry_7:       EQU H'0815'
+
+;------------------------------------------------------------------------------
+; Cold boot init (target of dispatch_table[0])
+;------------------------------------------------------------------------------
+boot_init:              EQU H'0818'                ; LIS 0; OUTS 0; OUTS 1; …
+boot_smi_vector_setup:  EQU H'083D'                ; LIS H'0B'; OUTS H'0C'; LI H'99'; OUTS H'0D'; LIS 1; OUTS H'0E'
+boot_screen_clear:      EQU H'0847'                ; DCI H'5062'; LR H,DC; loop store space
+
+;------------------------------------------------------------------------------
+; Dispatch-table targets (purpose under investigation in Phase 3)
+;------------------------------------------------------------------------------
+mode_entry_1:           EQU H'09F9'                ; VERIFY — dispatch[1]
+mode_entry_2:           EQU H'0A10'                ; VERIFY — dispatch[2]
+mode_entry_3:           EQU H'0A19'                ; dispatch[3]; calls U12:sub_05FB and U12:sub_0624
+mode_entry_4:           EQU H'0A1F'                ; VERIFY
+mode_entry_5:           EQU H'0A31'                ; VERIFY
+mode_entry_6:           EQU H'0B41'                ; VERIFY — dispatch[7] (reordered in table)
+mode_entry_7:           EQU H'0B81'                ; VERIFY — dispatch[6]
+
+;------------------------------------------------------------------------------
+; SMI ISR (entry address from boot_smi_vector_setup)
+;------------------------------------------------------------------------------
+smi_isr:                EQU H'0B99'                ; ISR entry; LR 6,A; LR J,W; …
+smi_isr_save_done:      EQU H'0BA4'                ; DCI H'8000' — read interrupting peripheral
+;smi_isr_dispatch:      EQU H'0Bxx'                ; VERIFY — body of ISR after register save
+
+;------------------------------------------------------------------------------
+; Scratchpad map (CPU-internal RAM, system-wide naming)
+;------------------------------------------------------------------------------
+isr_save_isar:          EQU H'18'                  ; saved ISAR (auto-store, ISARU=3 ISARL=0)
+isr_save_qu:            EQU H'19'
+isr_save_ql:            EQU H'1A'
+
+;------------------------------------------------------------------------------
+; I/O port equates (system-wide; same names appear in U1.sym, U12.sym)
+;------------------------------------------------------------------------------
+PORT_CPU_0:             EQU H'00'                  ; UART data path / character translation
+PORT_CPU_1:             EQU H'01'                  ; status (UART, DIPs, kbd strobe)
+PORT_PIO_04:            EQU H'04'                  ; external PIO group 1
+PORT_PIO_05:            EQU H'05'
+PORT_PIO_06:            EQU H'06'
+PORT_PIO_07:            EQU H'07'
+PORT_PIO_08:            EQU H'08'                  ; external (group 2 / extended)
+PORT_PIO_0A:            EQU H'0A'
+PORT_SMI_VEC_HI:        EQU H'0C'                  ; MK3853 SMI interrupt vector hi
+PORT_SMI_VEC_LO:        EQU H'0D'                  ; MK3853 SMI interrupt vector lo
+PORT_SMI_ICP:           EQU H'0E'                  ; MK3853 SMI interrupt control / mask
+PORT_SMI_TIMER:         EQU H'0F'                  ; MK3853 SMI programmable timer
+
+;------------------------------------------------------------------------------
+; External memory targets (DCI destinations)
+;------------------------------------------------------------------------------
+ext_screen_base:        EQU H'5062'                ; VERIFY — VRAM cursor base; first ST writes a space
+ext_peripheral_8000:    EQU H'8000'                ; VERIFY — UART RX data? (read in ISR)
+
+;------------------------------------------------------------------------------
+; Cross-ROM references (callees in U12)
+;------------------------------------------------------------------------------
+; PI calls into U12: H'0593', H'05FB', H'0624', H'0793' — labels live in U12.sym

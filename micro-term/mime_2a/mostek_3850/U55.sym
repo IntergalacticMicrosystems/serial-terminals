@@ -1,0 +1,11 @@
+; U55 — DATA ROM (MM2716Q), base H'0C00', 2 KB.
+;
+; CLASSIFIED AS DATA-ONLY (see load_address_verification.md).
+; The bytes happen to round-trip when treated as F8 instructions, but the
+; ROM is not executable — read by the CPU only via DCI + LM. Likely contains
+; glyph bitmaps and/or attribute tables that supplement U39 (the
+; non-CPU-mapped char-gen mask ROM). Stride and exact contents TBD; once the
+; access pattern is identified in U22/U12, this file should declare named
+; offsets (e.g. font_block, attr_table) that match the strides observed.
+
+charrom_data_base:      EQU H'0C00'                ; first byte; entered via DCI from U12:H'0704'

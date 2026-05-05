@@ -1,0 +1,18 @@
+H'0800'  stride=3  JMP  entries=8  in_this_rom=8  cross=0
+    [  0]  H'0818'
+    [  1]  H'09F9'
+    [  2]  H'0A10'
+    [  3]  H'0A19'
+    [  4]  H'0A1F'
+    [  5]  H'0A31'
+    [  6]  H'0B81'
+    [  7]  H'0B41'
+
+H'0A19'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'05FB'  (cross-ROM)
+    [  1]  H'0624'  (cross-ROM)
+
+H'0B47'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'0593'  (cross-ROM)
+    [  1]  H'0793'  (cross-ROM)
+

@@ -1,0 +1,23 @@
+# F8 build artifacts
+build/
+*.p
+*.lst
+*.hex
+*.s19
+*-rebuilt.bin
+*.raw
+*.aslog
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor
+*~
+*.swp
+.DS_Store
+
+# DO NOT IGNORE the following — they are hand-curated source of truth:
+#   *.sym       — symbol files for disassembly projects
+#   *.asm       — disassembly listings (regenerable but reviewable in PRs)
+#   *.md        — design docs, memory maps, handler tables

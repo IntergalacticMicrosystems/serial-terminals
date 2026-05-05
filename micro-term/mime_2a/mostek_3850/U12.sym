@@ -1,0 +1,53 @@
+; U12 — library / helpers ROM (MM2708Q), base H'0400', 1 KB.
+;
+; Called from both U1 (8 PI sites in first 0x200 of U1) and U22 (several
+; dispatch handlers). Trailing `H'07F0..H'07FF'` is unprogrammed 0xFF padding.
+;
+; Format: AS "name: EQU H'NNNN'".
+
+;------------------------------------------------------------------------------
+; Helper subroutines (PI targets — names assigned by call-site context;
+; bodies need Phase 3 reverse-engineering)
+;------------------------------------------------------------------------------
+sub_04DB:               EQU H'04DB'                ; called from U1:H'013B'
+sub_058F:               EQU H'058F'                ; called from U1:H'0159', '0188', '0195' — likely a "common entry"
+sub_0593:               EQU H'0593'                ; called from U22:H'0B47'
+sub_05B4:               EQU H'05B4'                ; called from U12:H'0450' (intra-ROM)
+sub_05E9:               EQU H'05E9'                ; called from U12:H'04E7'
+sub_05F5:               EQU H'05F5'                ; called from U1:H'0159'
+sub_05FB:               EQU H'05FB'                ; called from U1:H'0188'; U12:H'04F0'; U22:H'0A19'
+sub_0601:               EQU H'0601'                ; called from U1:H'0195'
+sub_0612:               EQU H'0612'                ; called from U1:H'013B'; U22:H'084F' (boot screen-clear loop)
+sub_0624:               EQU H'0624'                ; called from U22:H'0A19'
+sub_06F8:               EQU H'06F8'                ; called from U1:H'00EC'
+sub_0703:               EQU H'0703'                ; called from U1:H'00EC'
+sub_0712:               EQU H'0712'                ; called from U12:H'04E7', '04F0' (intra-ROM)
+sub_0793:               EQU H'0793'                ; called from U22:H'0B47'
+
+;------------------------------------------------------------------------------
+; Internal PI tables (the table addresses themselves)
+;------------------------------------------------------------------------------
+pi_table_0450:          EQU H'0450'                ; PI H'0612' / PI H'05B4'
+pi_table_04E7:          EQU H'04E7'                ; PI H'0712' / PI H'05E9'
+pi_table_04F0:          EQU H'04F0'                ; PI H'0712' / PI H'05FB'
+
+;------------------------------------------------------------------------------
+; External memory targets seen from U12
+;------------------------------------------------------------------------------
+ext_peripheral_8000:    EQU H'8000'                ; same target as U22 ISR's DCI
+ext_charrom_data:       EQU H'0C00'                ; U55 base (DCI for glyph/attribute lookup)
+ext_workram_2000:       EQU H'2000'                ; working RAM region (1 hit so far)
+
+;------------------------------------------------------------------------------
+; I/O port equates (system-wide)
+;------------------------------------------------------------------------------
+PORT_CPU_0:             EQU H'00'
+PORT_CPU_1:             EQU H'01'
+PORT_PIO_04:            EQU H'04'
+PORT_PIO_05:            EQU H'05'
+PORT_PIO_06:            EQU H'06'
+PORT_PIO_07:            EQU H'07'
+PORT_SMI_VEC_HI:        EQU H'0C'
+PORT_SMI_VEC_LO:        EQU H'0D'
+PORT_SMI_ICP:           EQU H'0E'
+PORT_SMI_TIMER:         EQU H'0F'

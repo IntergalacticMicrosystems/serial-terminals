@@ -1,0 +1,36 @@
+H'00EC'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'06F8'  (cross-ROM)
+    [  1]  H'0703'  (cross-ROM)
+
+H'013B'  stride=4  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'0612'  (cross-ROM)
+    [  1]  H'04DB'  (cross-ROM)
+
+H'0159'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'05F5'  (cross-ROM)
+
+H'0188'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'05FB'  (cross-ROM)
+
+H'0195'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'0601'  (cross-ROM)
+
+H'0253'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'06E5'  (cross-ROM)
+    [  1]  H'0752'  (cross-ROM)
+
+H'03A3'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'05FB'  (cross-ROM)
+
+H'03B0'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'05FB'  (cross-ROM)
+
+H'03B9'  stride=3  PI   entries=2  in_this_rom=0  cross=2
+    [  0]  H'058F'  (cross-ROM)
+    [  1]  H'07D5'  (cross-ROM)
+

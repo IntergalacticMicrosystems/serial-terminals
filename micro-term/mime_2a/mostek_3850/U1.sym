@@ -1,0 +1,43 @@
+; U1 — boot ROM (F2708), base H'0000', 1 KB.
+;
+; Hand-curated symbol table for U1.asm. Format: AS "name: EQU H'NNNN'".
+
+;------------------------------------------------------------------------------
+; CPU-fixed entry points
+;------------------------------------------------------------------------------
+reset_vector:           EQU H'0000'                ; JMP H'0800' (= U22:dispatch_table[0])
+
+;------------------------------------------------------------------------------
+; Translation / decoder routines (Phase 2 inference; verify in Phase 3)
+;------------------------------------------------------------------------------
+; Heavy use of CPU port 0 in the H'0000..H'00FF' region: many INS 0/OUTS 0,
+; suggesting per-byte translation / decoder routines (e.g. ASCII↔display
+; translation, control-code dispatch, parity calculation).
+poll_or_xlate_loop:     EQU H'0005'                ; VERIFY — common BR target across U1
+xlate_helper_004E:      EQU H'004E'                ; VERIFY — BR target from H'007', H'01C', etc.
+
+;------------------------------------------------------------------------------
+; Cross-ROM call sites (PI tables landing in U12)
+;------------------------------------------------------------------------------
+; (These are CALLEES — defined in U12.sym. Listed here for cross-reference.)
+; H'00EC' -> U12:H'06F8', H'0703'
+; H'013B' -> U12:H'0612', H'04DB'
+; H'0159' -> U12:H'058F', H'05F5'
+; H'0188' -> U12:H'058F', H'05FB'
+; H'0195' -> U12:H'058F', H'0601'
+
+;------------------------------------------------------------------------------
+; I/O port equates (system-wide)
+;------------------------------------------------------------------------------
+PORT_CPU_0:             EQU H'00'
+PORT_CPU_1:             EQU H'01'
+PORT_PIO_04:            EQU H'04'
+PORT_PIO_05:            EQU H'05'
+PORT_PIO_06:            EQU H'06'
+PORT_PIO_07:            EQU H'07'
+PORT_PIO_08:            EQU H'08'
+PORT_PIO_0A:            EQU H'0A'
+PORT_SMI_VEC_HI:        EQU H'0C'
+PORT_SMI_VEC_LO:        EQU H'0D'
+PORT_SMI_ICP:           EQU H'0E'
+PORT_SMI_TIMER:         EQU H'0F'
