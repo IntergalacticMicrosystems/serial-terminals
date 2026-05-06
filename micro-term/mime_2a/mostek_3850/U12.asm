@@ -1,5 +1,5 @@
 ; Relabelled disassembly. Origin H'0400'.
-; Symbols loaded from: U12.sym (20 addr, 10 port)
+; Symbols loaded from: U12.sym (21 addr, 10 port)
 ; Idempotent — re-run after editing U12.sym to refresh.
 ;
         CPU MK3850
@@ -20,6 +20,7 @@ sub_0612:               EQU H'0612'
 sub_0624:               EQU H'0624'
 sub_06F8:               EQU H'06F8'
 sub_0703:               EQU H'0703'
+sub_0709:               EQU H'0709'
 sub_0712:               EQU H'0712'
 sub_0793:               EQU H'0793'
 ext_charrom_data:       EQU H'0C00'
@@ -321,7 +322,7 @@ PORT_SMI_TIMER:         EQU H'0F'
         LR   S,A                        ; 588: 5c
         LR   DC,Q                       ; 589: 0f
         LR   H,DC                       ; 58a: 11
-        PI   H'0709'                    ; 58b: 28 07 09
+        PI   sub_0709                   ; 58b: 28 07 09
         PK                              ; 58e: 0c
         LR   K,P                        ; 58f: 08
         CLR                             ; 590: 70
@@ -549,7 +550,7 @@ PORT_SMI_TIMER:         EQU H'0F'
         ADC                             ; 6b7: 8e
         LR   Q,DC                       ; 6b8: 0e
         LR   5,A                        ; 6b9: 55
-        PI   H'0709'                    ; 6ba: 28 07 09
+        PI   sub_0709                   ; 6ba: 28 07 09
         LISL 3                          ; 6bd: 6b
         LR   A,5                        ; 6be: 45
         BR   H'0650'                    ; 6bf: 90 90

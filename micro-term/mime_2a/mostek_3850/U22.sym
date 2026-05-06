@@ -41,15 +41,41 @@ mode_entry_7:           EQU H'0B81'                ; VERIFY — dispatch[6]
 ; SMI ISR (entry address from boot_smi_vector_setup)
 ;------------------------------------------------------------------------------
 smi_isr:                EQU H'0B99'                ; ISR entry; LR 6,A; LR J,W; …
-smi_isr_save_done:      EQU H'0BA4'                ; DCI H'8000' — read interrupting peripheral
-;smi_isr_dispatch:      EQU H'0Bxx'                ; VERIFY — body of ISR after register save
+smi_isr_read_uart:      EQU H'0BA4'                ; DCI H'8000' — read AY-5-1013A RX byte
+smi_isr_check_err:      EQU H'0BB5'                ; INS 1 ; NI H'03' — check parity/framing flags
+smi_isr_ring_wrap:      EQU H'0BC0'                ; LR A,IS ; BR7 — 8-byte ring-buffer wrap
+smi_isr_exit_err:       EQU H'0BF3'                ; VERIFY — error-exit branch target
 
 ;------------------------------------------------------------------------------
-; Scratchpad map (CPU-internal RAM, system-wide naming)
+; Main control / polling loop (post-boot, called as dispatch_entry_2)
 ;------------------------------------------------------------------------------
-isr_save_isar:          EQU H'18'                  ; saved ISAR (auto-store, ISARU=3 ISARL=0)
-isr_save_qu:            EQU H'19'
-isr_save_ql:            EQU H'1A'
+main_loop_top:          EQU H'0A99'                ; loop tail: set r4 bit 0; PI dispatch_entry_7; loop while sign clear
+two_level_dispatch:     EQU H'0A5D'                ; LM ; LR QL,A ; LIS 9 ; LR QU,A ; LR DC,Q ; LM — primary→secondary table lookup
+;       — mode_entry_4 (H'0A1F') is the work-routine caller (defined above)
+
+;------------------------------------------------------------------------------
+; Embedded data tables in U22 (read via DCI ; LM)
+;------------------------------------------------------------------------------
+xlate_table_08DE:       EQU H'08DE'                ; VERIFY — lookup table, accessed from H'0A40'
+data_block_085D:        EQU H'085D'                ; VERIFY — DCI target from H'0A8F'
+data_block_087D:        EQU H'087D'                ; VERIFY — DCI target from H'0AC1'
+xlate_table2_0900:      EQU H'0900'                ; secondary translation table — accessed via Q=0x09xx, LM reads action byte
+data_block_08BC:        EQU H'08BC'                ; VERIFY — DCI target from H'0AD6'
+data_block_08CC:        EQU H'08CC'                ; VERIFY — DCI target from H'0B35'
+data_block_095E:        EQU H'095E'                ; VERIFY — DCI target from H'0AAE'
+
+;------------------------------------------------------------------------------
+; Scratchpad map (CPU-internal RAM)
+; Reference-only — these slots appear in `LR A,n` / `AS n` instructions as
+; bare numeric operands, not as H'NN' addresses, so the relabel.py port
+; substitution doesn't apply. Listed for human reading.
+;------------------------------------------------------------------------------
+;   r1   = ring_head_ptr   — head index into RX ring buffer
+;   r4   = config_flags    — shadow of CPU port 0 bit 1 + other DIP bits
+;   H'18'= isr_save_isar   — saved ISAR (auto-store, ISARU=3 ISARL=0)
+;   H'19'= isr_save_qu
+;   H'1A'= isr_save_ql
+;   H'38..H'3F' = rx_ring_buffer (scratchpad page 7; BR7 wraps)
 
 ;------------------------------------------------------------------------------
 ; I/O port equates (system-wide; same names appear in U1.sym, U12.sym)

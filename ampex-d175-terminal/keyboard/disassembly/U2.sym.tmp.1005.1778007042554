@@ -1,0 +1,33 @@
+# U2-D2716.bin (Ampex D-175 detached keyboard, INS8039 firmware) — symbol overlay.
+#
+# Curated by hand. Regenerate U2.asm with:
+#   make U2.asm
+#
+# Format:
+#   HHHH NAME           ; optional comment
+#   NAME EQU $HHHH      ; for non-code addresses (RAM aliases, etc.)
+#   +entry HHHH         ; force the decoder to start tracing at HHHH
+#                       ; (use when a code block is reached only via
+#                       ; JMPP @A and would otherwise be left as data)
+#
+# All claims here are working hypotheses pending Phase 1 hardware tracing
+# (see ../REVERSE_ENGINEERING_PLAN.md). Update freely as analysis proceeds.
+
+# ---- Reset / interrupt vectors ---------------------------------------------
+0000 RESET                 ; cold-start: DIS I ; JMP MAIN_INIT
+0003 IRQ_EXT               ; external (INT) — currently DIS I ; RETR (unused?)
+0007 IRQ_TIMER             ; timer/counter ISR — heart of the scan/tick loop
+
+# ---- Main init -------------------------------------------------------------
+0100 MAIN_INIT             ; entered from RESET via JMP at $0001
+
+# ---- External data-bus scan loop ------------------------------------------
+# Iterates R7 from $30..$3C, using R7 both as the internal-RAM source index
+# (latest scan state) and as the external bus low-address byte. P2's upper
+# nibble supplies the upper bus address bits (TBD by Phase 1 schematic). Each
+# iteration writes a byte to and reads a byte from a single external location
+# — almost certainly the GI U1 keyboard-scanner data port. Result byte goes
+# into R5, then handler at $01D0 processes it.
+00E4 SCAN_GI_PORT          ; CALL site for the scan loop (called from main)
+00EB SCAN_GI_PORT_LOOP
+01D0 PROC_SCAN_BYTE        ; consumes one byte returned from the GI scanner

@@ -15,12 +15,13 @@ sub_0593:               EQU H'0593'                ; called from U22:H'0B47'
 sub_05B4:               EQU H'05B4'                ; called from U12:H'0450' (intra-ROM)
 sub_05E9:               EQU H'05E9'                ; called from U12:H'04E7'
 sub_05F5:               EQU H'05F5'                ; called from U1:H'0159'
-sub_05FB:               EQU H'05FB'                ; called from U1:H'0188'; U12:H'04F0'; U22:H'0A19'
-sub_0601:               EQU H'0601'                ; called from U1:H'0195'
+sub_05FB:               EQU H'05FB'                ; called from U1:H'0188'; U12:H'04F0'; U22:H'0A19' — body: CLR ; LR HL,A ; LR A,r2 ; BR sub_0612 (zero HL, set up A from r2, fall through into 0x0612)
+sub_0601:               EQU H'0601'                ; called from U1:H'0195' — cursor-advance HL (column): increment HL, wrap to 0 if HL >= 0xCF, return via PK
 sub_0612:               EQU H'0612'                ; called from U1:H'013B'; U22:H'084F' (boot screen-clear loop)
 sub_0624:               EQU H'0624'                ; called from U22:H'0A19'
 sub_06F8:               EQU H'06F8'                ; called from U1:H'00EC'
-sub_0703:               EQU H'0703'                ; called from U1:H'00EC'
+sub_0703:               EQU H'0703'                ; called from U1:H'029F' (post-boot) — preload-charrom: LR K,P ; DCI H'0C00' ; LM ; PK (loads first U55 byte into A and returns)
+sub_0709:               EQU H'0709'                ; alt entry — DI ; LISU 2 ; LISL 1 ; restore K-pair from scratchpad page 2; EI ; POP — likely the ISR exit path
 sub_0712:               EQU H'0712'                ; called from U12:H'04E7', '04F0' (intra-ROM)
 sub_0793:               EQU H'0793'                ; called from U22:H'0B47'
 

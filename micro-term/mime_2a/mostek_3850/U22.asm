@@ -1,5 +1,5 @@
 ; Relabelled disassembly. Origin H'0800'.
-; Symbols loaded from: U22.sym (22 addr, 15 port)
+; Symbols loaded from: U22.sym (34 addr, 12 port)
 ; Idempotent — re-run after editing U22.sym to refresh.
 ;
         CPU MK3850
@@ -16,15 +16,27 @@ dispatch_entry_7:       EQU H'0815'
 boot_init:              EQU H'0818'
 boot_smi_vector_setup:  EQU H'083D'
 boot_screen_clear:      EQU H'0847'
+data_block_085D:        EQU H'085D'
+data_block_087D:        EQU H'087D'
+data_block_08BC:        EQU H'08BC'
+data_block_08CC:        EQU H'08CC'
+xlate_table_08DE:       EQU H'08DE'
+xlate_table2_0900:      EQU H'0900'
+data_block_095E:        EQU H'095E'
 mode_entry_1:           EQU H'09F9'
 mode_entry_2:           EQU H'0A10'
 mode_entry_3:           EQU H'0A19'
 mode_entry_4:           EQU H'0A1F'
 mode_entry_5:           EQU H'0A31'
+two_level_dispatch:     EQU H'0A5D'
+main_loop_top:          EQU H'0A99'
 mode_entry_6:           EQU H'0B41'
 mode_entry_7:           EQU H'0B81'
 smi_isr:                EQU H'0B99'
-smi_isr_save_done:      EQU H'0BA4'
+smi_isr_read_uart:      EQU H'0BA4'
+smi_isr_check_err:      EQU H'0BB5'
+smi_isr_ring_wrap:      EQU H'0BC0'
+smi_isr_exit_err:       EQU H'0BF3'
 ext_screen_base:        EQU H'5062'
 ext_peripheral_8000:    EQU H'8000'
 PORT_CPU_0:             EQU H'00'
@@ -39,9 +51,6 @@ PORT_SMI_VEC_HI:        EQU H'0C'
 PORT_SMI_VEC_LO:        EQU H'0D'
 PORT_SMI_ICP:           EQU H'0E'
 PORT_SMI_TIMER:         EQU H'0F'
-isr_save_isar:          EQU H'18'
-isr_save_qu:            EQU H'19'
-isr_save_ql:            EQU H'1A'
 ;
         ORG H'0800'
 ;
@@ -470,7 +479,7 @@ isr_save_ql:            EQU H'1A'
         PI   H'0624'                    ; a1c: 28 06 24
         LIS  H'01'                      ; a1f: 71
         NS   4                          ; a20: f4
-        BF   4,H'0A99'                  ; a21: 94 77
+        BNZ  main_loop_top              ; a21: 94 77
         PI   dispatch_entry_7           ; a23: 28 08 15
         BM   mode_entry_4               ; a26: 91 f8
         LR   A,4                        ; a28: 44
@@ -489,7 +498,7 @@ isr_save_ql:            EQU H'1A'
         BF   1,H'0A84'                  ; a3a: 91 49
         CI   H'21'                      ; a3c: 25 21
         BM   mode_entry_1               ; a3e: 91 ba
-        DCI  H'08DE'                    ; a40: 2a 08 de
+        DCI  xlate_table_08DE           ; a40: 2a 08 de
         LR   A,3                        ; a43: 43
         SL   1                          ; a44: 13
         BF   1,H'0A83'                  ; a45: 91 3d
@@ -545,23 +554,23 @@ isr_save_ql:            EQU H'1A'
         BF   4,H'0A2F'                  ; a88: 94 a6
         PI   dispatch_entry_7           ; a8a: 28 08 15
         BM   mode_entry_4               ; a8d: 91 91
-        DCI  H'085D'                    ; a8f: 2a 08 5d
+        DCI  data_block_085D            ; a8f: 2a 08 5d
         CI   H'1F'                      ; a92: 25 1f
         BM   mode_entry_4               ; a94: 91 8a
         ADC                             ; a96: 8e
-        BR   H'0A5D'                    ; a97: 90 c5
+        BR   two_level_dispatch         ; a97: 90 c5
         LR   A,4                        ; a99: 44
         OI   H'01'                      ; a9a: 22 01
         LR   4,A                        ; a9c: 54
         PI   dispatch_entry_7           ; a9d: 28 08 15
-        BF   1,H'0A99'                  ; aa0: 91 f8
+        BM   main_loop_top              ; aa0: 91 f8
         CI   H'1F'                      ; aa2: 25 1f
         BP   mode_entry_5               ; aa4: 81 8c
         CI   H'5C'                      ; aa6: 25 5c
         BF   1,H'0A9D'                  ; aa8: 91 f4
         AI   H'D0'                      ; aaa: 24 d0
         BF   1,H'0A9D'                  ; aac: 91 f0
-        DCI  H'095E'                    ; aae: 2a 09 5e
+        DCI  data_block_095E            ; aae: 2a 09 5e
         ADC                             ; ab1: 8e
         ADC                             ; ab2: 8e
         DS   4                          ; ab3: 34
@@ -571,7 +580,7 @@ isr_save_ql:            EQU H'1A'
         CI   H'5C'                      ; abb: 25 5c
         BF   1,H'0A94'                  ; abd: 91 d6
         AI   H'DE'                      ; abf: 24 de
-        DCI  H'087D'                    ; ac1: 2a 08 7d
+        DCI  data_block_087D            ; ac1: 2a 08 7d
         BR   H'0A94'                    ; ac4: 90 cf
         PI   H'07C5'                    ; ac6: 28 07 c5
         DS   5                          ; ac9: 35
@@ -583,7 +592,7 @@ isr_save_ql:            EQU H'1A'
         NI   H'10'                      ; ad1: 21 10
         BF   4,H'0AF1'                  ; ad3: 94 1d
         LR   A,3                        ; ad5: 43
-        DCI  H'08BC'                    ; ad6: 2a 08 bc
+        DCI  data_block_08BC            ; ad6: 2a 08 bc
         ADC                             ; ad9: 8e
         LR   A,5                        ; ada: 45
         INC                             ; adb: 1f
@@ -644,13 +653,13 @@ isr_save_ql:            EQU H'1A'
         LIS  H'09'                      ; b31: 79
         AS   3                          ; b32: c3
         NI   H'1F'                      ; b33: 21 1f
-        DCI  H'08CC'                    ; b35: 2a 08 cc
+        DCI  data_block_08CC            ; b35: 2a 08 cc
         ADC                             ; b38: 8e
         LIS  H'0B'                      ; b39: 7b
         LR   KU,A                       ; b3a: 04
         LI   H'4A'                      ; b3b: 20 4a
         LR   KL,A                       ; b3d: 05
-        JMP  H'0A5D'                    ; b3e: 29 0a 5d
+        JMP  two_level_dispatch         ; b3e: 29 0a 5d
         LR   K,P                        ; b41: 08
         PI   H'0712'                    ; b42: 28 07 12
         BR   H'0B4A'                    ; b45: 90 04
@@ -722,19 +731,19 @@ isr_save_ql:            EQU H'1A'
         AS   1                          ; ba8: c1
         LR   IS,A                       ; ba9: 0b
         LM                              ; baa: 16
-        BT   4,H'0BF3'                  ; bab: 84 47
+        BZ   smi_isr_exit_err           ; bab: 84 47
         NI   H'7F'                      ; bad: 21 7f
         LR   D,A                        ; baf: 5e
-        BT   4,H'0BB5'                  ; bb0: 84 04
+        BZ   smi_isr_check_err          ; bb0: 84 04
         INC                             ; bb2: 1f
-        BT   1,H'0BC0'                  ; bb3: 81 0c
+        BP   smi_isr_ring_wrap          ; bb3: 81 0c
         INS  1                          ; bb5: a1
         NI   H'03'                      ; bb6: 21 03
         XI   H'01'                      ; bb8: 23 01
-        BT   4,H'0BC0'                  ; bba: 84 05
+        BZ   smi_isr_ring_wrap          ; bba: 84 05
         LR   A,4                        ; bbc: 44
         SL   4                          ; bbd: 15
-        BT   1,H'0BF3'                  ; bbe: 81 34
+        BP   smi_isr_exit_err           ; bbe: 81 34
         LR   A,IS                       ; bc0: 0a
         BR7  H'0BCB'                    ; bc1: 8f 09
         AI   H'F8'                      ; bc3: 24 f8
@@ -746,7 +755,7 @@ isr_save_ql:            EQU H'1A'
         INS  1                          ; bcc: a1
         NI   H'06'                      ; bcd: 21 06
         XI   H'04'                      ; bcf: 23 04
-        BT   4,H'0BF3'                  ; bd1: 84 21
+        BZ   smi_isr_exit_err           ; bd1: 84 21
         LR   A,1                        ; bd3: 41
         COM                             ; bd4: 18
         INC                             ; bd5: 1f
@@ -754,7 +763,7 @@ isr_save_ql:            EQU H'1A'
         BT   1,H'0BDB'                  ; bd7: 81 03
         AI   H'20'                      ; bd9: 24 20
         CI   H'18'                      ; bdb: 25 18
-        BT   1,H'0BF3'                  ; bdd: 81 15
+        BP   smi_isr_exit_err           ; bdd: 81 15
         INS  1                          ; bdf: a1
         SL   4                          ; be0: 15
         BF   1,H'0BE6'                  ; be1: 91 04
@@ -766,7 +775,7 @@ isr_save_ql:            EQU H'1A'
         OI   H'02'                      ; be9: 22 02
         LR   S,A                        ; beb: 5c
         NI   H'10'                      ; bec: 21 10
-        BT   4,H'0BF3'                  ; bee: 84 04
+        BZ   smi_isr_exit_err           ; bee: 84 04
         JMP  H'0111'                    ; bf0: 29 01 11
         LISU 3                          ; bf3: 63
         LISL 2                          ; bf4: 6a

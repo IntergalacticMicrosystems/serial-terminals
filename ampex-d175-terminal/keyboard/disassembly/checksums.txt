@@ -1,0 +1,3 @@
+# SHA-256 of every binary fed into this disassembly tree.
+# Regenerate:  sha256sum ../U2-D2716.bin
+9e421d7f5724185014e28d99864a2cfbec5201ff7aa78d76ce167f892a8b32e1  U2-D2716.bin

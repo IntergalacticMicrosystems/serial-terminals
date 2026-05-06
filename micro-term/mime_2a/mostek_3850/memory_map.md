@@ -29,7 +29,7 @@ U1/U12/U22 and observation of DCI/INS/OUTS instruction sites.
 |---------------|---------------|---------------|
 | `H'2000..'`   | U12:7B6       | Working / variable RAM (1 hit; exact extent TBD) |
 | `H'5062'`     | U22:847       | Screen / cursor base — `DCI H'5062'; LR H,DC; LI H'20'; ST` is a fill-with-space loop, classic VRAM-clear |
-| `H'8000..'`   | U12:6CC, 6E6; U22:BA4 | Peripheral or VRAM at 0x8000 — read in the SMI ISR (`H'0B99'`) immediately after entry: prime candidate for **UART data register** or status latch |
+| `H'8000'`     | U12:6CC, 6E6; U22:BA4 | **AY-5-1013A receive-data register**, confirmed: read in the SMI ISR via `DCI H'8000' ; LM`, parity-stripped, then ring-buffered into scratchpad page 7. CPU port 1 bits 0..1 are read immediately afterward as the UART error-status companion. |
 | `H'9C44'`     | U22:87A       | Probable scratch/VRAM offset (single hit) |
 
 (Boundaries TBD — confirm by tracing per-region read/write patterns and the
@@ -54,7 +54,7 @@ Layout per F8 architecture; named slots discovered so far:
 | Port       | Device   | Function |
 |------------|----------|----------|
 | `H'00'`    | CPU port 0 | Heavy R/W traffic in U1/U12. Likely the **UART data path** (transmit/receive byte) or character translation latch. Many `INS 0` reads and `OUTS 0` writes in U1's translation routines. |
-| `H'01'`    | CPU port 1 | Read-only via `INS 1` — likely status/strobes (UART TBMT/DAV/PE/FE/OE bits, DIP-switch positions, keyboard-strobe). |
+| `H'01'`    | CPU port 1 | Read-only via `INS 1`. Confirmed bit assignments: **bit 0..1** = UART parity / framing / overrun error flags (read in `smi_isr` after byte fetch); **bit 4** = keyboard strobe / data-available (read in `mode_entry_6` work loop). Other bits TBD. |
 | `H'04'..H'07'` | external (PIO?) | R/W. `OUTS H'04', OUTS H'06'` and `INS H'04', INS H'05', INS H'06', INS H'07'` all appear in U22/U12. **Likely a MK3861 PIO** (or external decode) at port group 1 servicing the AY-5-1013A UART control/status lines, baud-rate generator, and board-level configuration latches. |
 | `H'08'`    | external   | `INS H'08'` (U22:89E, 915) and `OUTS H'08'` (U22:890). Probable second PIO port group 2 or an extended-decode latch. |
 | `H'0A'`    | external   | `INS H'0A'` (U22:8C7, 90E) and `OUTS H'0A'` (U22:88F). Same group as port 8. |
