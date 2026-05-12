@@ -7,7 +7,7 @@
 	(title_block
 		(title "Ampex D-175 CRT Board Reverse Engineering")
 		(date "2026-05-06")
-		(rev "photo-trace-5")
+		(rev "photo-trace-8")
 		(company "Ampex / Star Technologies D-175")
 		(comment 1 "Photo-derived working schematic; not yet electrically complete.")
 		(comment 2 "Use reverse-engineering/*.md and *.csv files for confidence notes.")
@@ -50,7 +50,7 @@
 		)
 		(uuid "4c5279ea-42d7-4730-9bf9-c0c790ea1bc1")
 	)
-	(text "J1 AC IN from main transformer\n1=J1_YEL_1  2=J1_YEL_2\n3=J1_GRY_3  4=J1_BRN_4  5=J1_BRN_5\nCR101-CR106 rectifier groups unresolved"
+	(text "J1 transformer harness - continuity confirmed\n1 YEL -> CR106 A   2 YEL -> CR105 A\n3 GRY -> CR101 A + CR102 A\n4 BRN -> CR102 K + CR103 A   5 BRN -> CR104 A + CR101 K"
 		(exclude_from_sim no)
 		(at 22 43 0)
 		(effects
@@ -73,7 +73,7 @@
 		)
 		(uuid "a4d2d5ac-8355-4da2-a1a8-c9f9b8697fd5")
 	)
-	(text "J2 GROUND\nStart point for return-net tracing\nConfirm chassis/aquadag relationship"
+	(text "J2 GROUND / EARTH_CRT_AQUADAG\nUser-confirmed CRT ring/earth lead\nPhoto trace: broad left-side bus reaches Q401 reference side"
 		(exclude_from_sim no)
 		(at 22 102 0)
 		(effects
@@ -211,7 +211,7 @@
 		)
 		(uuid "11ca9b87-429f-4a7d-a6ed-354eab5d8672")
 	)
-	(text "CRT neck socket + video/focus/brightness\n1 green E1  2 yellow E2  3 brown E3  4 black=EARTH_CRT_AQUADAG\n5 NC  6 red E6  7 blue E7; rectified overlay: E2 likely video/cathode cluster, E7 near R510/focus-style network"
+	(text "CRT neck socket + video/focus/brightness\n1 green E1  2 yellow E2=video/cathode node  3 brown E3 likely J2-side ref\n4 black=EARTH_CRT_AQUADAG  5 NC  6 red E6  7 blue E7\nE2 continuity: non-J2 side of NS401 and R405"
 		(exclude_from_sim no)
 		(at 266 102 0)
 		(effects

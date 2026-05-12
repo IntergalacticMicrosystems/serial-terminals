@@ -23,6 +23,22 @@ The component side shows two rectifier areas around `J1`:
 - Upper group: `CR105`, `CR106`, with nearby `C105`, `C106`.
 - Lower/right group: `CR101`, `CR102`, `CR103`, `CR104`, with nearby `C101`-`C104` and bulk electrolytics.
 
+Trace pass 10 adds diode orientation:
+
+- `CR105` and `CR106`: cathode bands face right.
+- `CR101` and `CR102`: cathode bands face left.
+- `CR103` and `CR104`: cathode bands face right.
+
+Trace pass 11 adds user continuity:
+
+| J1 pin | Confirmed diode endpoint(s) |
+|---:|---|
+| 1 | `CR106` anode |
+| 2 | `CR105` anode |
+| 3 | `CR101` anode + `CR102` anode |
+| 4 | `CR102` cathode + `CR103` anode |
+| 5 | `CR104` anode + `CR101` cathode |
+
 The five transformer leads mean this is not a single two-wire AC input. The most likely monitor-board patterns are:
 
 - one transformer secondary feeding a full bridge or voltage doubler for a high-energy raw rail,
@@ -35,15 +51,15 @@ The photos do not yet prove which of those patterns applies.
 
 These are deliberately phrased as hypotheses, not schematic facts:
 
-- Yellow/yellow pins 1-2 are likely one AC secondary.
-- Brown/brown pins 4-5 are likely one AC secondary.
-- Grey pin 3 may be a center tap, shield, reference, or separate single-ended lead.
-- `CR101`-`CR104` likely create a rectified rail associated with one of the transformer secondary groups.
+- Yellow/yellow pins 1-2 feed `CR106`/`CR105` anodes respectively.
+- Brown/brown pins 4-5 feed the lower rectifier network nodes listed above.
+- Grey pin 3 feeds the common `CR101`/`CR102` anode node.
+- `CR101`-`CR104` likely create a rectified rail, split rail, or doubler associated with one of the transformer secondary groups. The mixed diode orientations mean this should not be assumed to be a simple bridge until endpoint nets are assigned.
 - `CR105`/`CR106` likely create a second rectified rail or clamp/protection path.
 
 ## Current Photo Limit
 
-The corrected mirrored solder-side crops expose a plausible `J1` five-pad row and nearby diode/capacitor pad groups, but they do not prove the individual `J1` pin-to-diode endpoint mapping.
+The corrected mirrored solder-side crops expose a plausible `J1` five-pad row and nearby diode/capacitor pad groups, but they did not prove the individual `J1` pin-to-diode endpoint mapping. User continuity now supplies the endpoint table above.
 
 Reasons:
 
@@ -55,17 +71,16 @@ Reasons:
 
 Use either a better straight-on solder-side close-up or the smallest continuity pass:
 
-1. Trace each visible diode cathode-band end in `CR101`-`CR106`.
-2. Associate each diode endpoint with the closest J1 pin landing region.
+1. Trace `CR105` cathode and `CR106` cathode.
+2. Trace `CR103` cathode and `CR104` cathode.
 3. Use capacitor polarity marks to name only the rectified outputs that are visually clear.
 
 If photo evidence remains ambiguous, these are the smallest useful unpowered checks:
 
-- J1 pin 1 to both ends of `CR105` and `CR106`.
-- J1 pin 2 to both ends of `CR105` and `CR106`.
-- J1 pin 3 to diode endpoints and capacitor negative/positive pads.
-- J1 pins 4 and 5 to `CR101`-`CR104` endpoints.
+- `CR105` cathode to nearby capacitor positive/negative pads.
+- `CR106` cathode to nearby capacitor positive/negative pads.
+- `CR103` and `CR104` cathodes to `C107` and the nearby large electrolytic nodes.
 
 ## Schematic Rule
 
-Do not draw a final bridge, center-tap rectifier, or doubler in KiCad until at least the diode endpoint mapping is confirmed. For now, represent `J1` as a five-pin transformer harness feeding unresolved rectifier groups.
+Do not draw a final bridge, center-tap rectifier, or doubler in KiCad until the output-side diode/capacitor nodes are confirmed. It is now safe to connect `J1` pins to the diode endpoints listed in trace pass 11.

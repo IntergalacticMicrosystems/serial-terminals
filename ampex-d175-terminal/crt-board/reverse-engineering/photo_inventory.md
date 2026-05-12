@@ -57,8 +57,20 @@ These would reduce manual continuity checks:
 | `overlays/front_back_rectified_blend.png` | Blend of rectified front/back images for matching pads to components. |
 | `overlays/rectified_full_front_back_montage.jpg` | Side-by-side front/back board-rectified comparison. |
 | `overlays/rectified_j1_power_montage.jpg` | Board-rectified J1/rectifier front/back/blend montage. |
+| `overlays/rectified_j1_rectifier_local_montage.jpg` | Enlarged board-rectified `J1` / `CR101`-`CR106` local montage. |
+| `overlays/rectified_front_cr105_cr106_band_zoom.png` | Front-side diode-band zoom for `CR105`/`CR106`. |
+| `overlays/rectified_front_cr101_cr104_band_zoom.png` | Front-side diode-band zoom for `CR101`-`CR104`. |
+| `overlays/back_auto_mirrored_j1_rectifier_hi_res_candidate.png` | High-resolution mirrored solder-side source crop for the `J1`/rectifier area. |
 | `overlays/rectified_crt_video_tall_montage.jpg` | Board-rectified CRT neck/video front/back/blend montage. |
 | `overlays/rectified_crt_e_pads_zoom_montage.jpg` | Zoomed board-rectified electrode pad strip. |
 | `overlays/rectified_crt_q401_zoom_montage.jpg` | Zoomed board-rectified `Q401`/video-output cluster. |
+| `overlays/rectified_q401_cluster_montage.jpg` | Board-rectified `Q401` local front/back/blend montage for pad-island tracing. |
+| `overlays/rectified_e2_to_q401_bridge_montage.jpg` | Board-rectified bridge from `E2`/`E3` down through `J2` and the `Q401` video/reference cluster. |
+| `overlays/rectified_back_e2_to_q401_bridge_analysis.jpg` | Raw/enhanced/edge solder-side bridge montage for copper-border tracing. |
+| `overlays/rectified_back_e2_e3_local_2x.png` | Local solder-side zoom of the `E2`/`E3` branch area. |
+| `overlays/rectified_blend_e2_e3_local_2x.png` | Enhanced blend zoom of the `E2`/`E3` branch area. |
+| `overlays/rectified_back_j2_to_q401_left_bus_2x.png` | Solder-side zoom following the broad `J2`-side bus into the `Q401` reference side. |
+| `overlays/front_auto_e2_e3_hi_res_candidate.png` | High-resolution source crop of the front-side `E2`/`E3` wire landings. |
+| `overlays/back_auto_mirrored_e2_q401_hi_res_candidate.png` | High-resolution mirrored solder-side crop covering the `E2`/`E3`/`J2`/`Q401` bridge. |
 | `overlays/manual_pages/service_manual_page_76.png` | Render of related Ampex 219/230 `PWBA - VIDEO BOARD` schematic page from the local service manual. |
 | `overlays/manual_pages/service_manual_page_76_crt_socket_label_text_crop.png` | Crop of the related manual's CRT socket / video / focus section. |

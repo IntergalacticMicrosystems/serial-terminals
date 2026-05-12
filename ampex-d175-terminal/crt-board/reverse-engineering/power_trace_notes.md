@@ -23,8 +23,9 @@ Generated helper crops:
   - pins 1 and 2: yellow
   - pin 3: grey
   - pins 4 and 5: brown
-- `CR101`, `CR102`, `CR103`, and `CR104` sit immediately next to `J1` and are laid out like a discrete bridge rectifier.
+- `CR101`, `CR102`, `CR103`, and `CR104` sit immediately next to `J1` and are laid out like a discrete rectifier group. Trace pass 10 confirms mixed diode orientation: `CR101`/`CR102` cathodes face left, while `CR103`/`CR104` cathodes face right.
 - `CR105` and `CR106` sit above `J1`, forming a second rectifier group near `C105` and `C106`.
+- User continuity confirms `J1` endpoint mapping: pin 1 to `CR106` anode, pin 2 to `CR105` anode, pin 3 to `CR101`/`CR102` anodes, pin 4 to `CR102` cathode plus `CR103` anode, and pin 5 to `CR104` anode plus `CR101` cathode.
 - `C101`, `C102`, `C103`, and `C104` are printed next to the rectifier-diode positions; the exact component population and role need close-up confirmation.
 - The solder side shows broad copper regions in this area, consistent with rectified power rails rather than logic-level signal routing.
 
@@ -34,10 +35,10 @@ Working interpretation:
 - The yellow pair on pins 1-2 likely forms one AC secondary.
 - The brown pair on pins 4-5 likely forms another AC secondary.
 - The grey lead on pin 3 may be a center tap, shield/reference, or separate secondary lead; do not assign function until traced.
-- `CR101`-`CR104` form a primary bridge for a high-energy raw DC rail.
+- `CR101`-`CR104` probably form a primary rectifier network for a high-energy raw DC rail, but the mixed diode orientation means this should not be called a simple bridge until endpoint nets are assigned.
 - Do not call this rail `+12V_RAW` or `+5V_RAW` yet. The nearby large electrolytics and CRT monitor topology make `B+_RAW` / `RAW_HV_DC` more likely for at least part of this section.
 
-The earlier four-conductor J1 interpretation is superseded. Exact J1-to-diode endpoint mapping remains pending.
+The earlier four-conductor J1 interpretation is superseded. Exact J1-to-diode input endpoint mapping is now confirmed; output-side rail naming remains pending.
 
 ### Large Electrolytics
 
@@ -82,15 +83,15 @@ Next trace objective:
 ## Immediate Ambiguities
 
 - Whether `J1` is mains AC or a transformer secondary feed is not yet proven from photos alone.
-- The full rectifier bridge node assignment cannot be completed from the current overview crop without either a sharper underside crop or manual continuity.
+- The full rectifier node assignment cannot be completed from the current overview crop without either a sharper underside crop or manual continuity.
 - The large capacitor values/voltages are partly obscured and should be transcribed from close-ups.
-- `U101` TO-3 case connection must not be guessed.
+- `U101` case/heatsink is now treated as confirmed `+5V` from user-provided mounting-screw continuity plus the LM323K case/output convention; its two isolated pins still need input/common assignment on the board.
 
 ## Minimal Continuity Checks To Avoid Over-Tracing
 
 If manual testing is allowed later, these four unpowered checks would resolve the power block quickly:
 
-1. `J1` pin-to-bridge-diode anode/cathode grouping.
+1. Rectifier output nodes from `CR105`/`CR106`/`CR103`/`CR104` cathodes to nearby capacitor polarity pads.
 2. Negative terminals of the large electrolytics to the labeled ground connector `J2`.
 3. `U101` case to board ground or output/common pads.
 4. `U102` tab/pin 2 to board ground.

@@ -44,6 +44,10 @@ powershell -ExecutionPolicy Bypass -File .\align_board_photos.ps1
 - `trace_pass_05_cpu_harness.md` - CPU-board harness photo/manual cross-reference and next blocker.
 - `trace_pass_06_rectified_photo_alignment.md` - board-rectified front/back alignment workflow.
 - `trace_pass_07_crt_neck_video.md` - first board-rectified CRT neck/video component trace.
+- `trace_pass_08_q401_video_local_graph.md` - first local copper-island graph for the `Q401` video-output area.
+- `trace_pass_09_e2_e3_j2_bridge.md` - bridge trace from `E2`/`E3` down to `J2` and the `Q401` local bus.
+- `trace_pass_10_j1_rectifier_orientation.md` - `J1` area diode-orientation pass for `CR101`-`CR106`.
+- `trace_pass_11_user_continuity_update.md` - user continuity results for `E2`/`NS401`/`R405` and `J1` diode endpoints.
 - `service_manual_cross_reference.md` - related Ampex 219/230 video-board schematic comparison.
 - `references.md` - component reference links and pinout notes.
 

@@ -46,7 +46,7 @@ Updated topology call:
 - Pins 4-5 brown are likely another secondary pair.
 - Pin 3 grey is unresolved.
 
-The corrected solder-side search exposes a likely five-pad `J1` row, but exact J1-to-diode endpoint mapping remains pending. See `trace_pass_03_j1_photo_alignment.md`.
+The corrected solder-side search exposed a likely five-pad `J1` row. Exact J1-to-diode endpoint mapping is now resolved by user continuity in `trace_pass_11_user_continuity_update.md`.
 
 ## J2 Ground
 

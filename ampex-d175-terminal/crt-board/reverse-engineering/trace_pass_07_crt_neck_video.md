@@ -18,7 +18,7 @@ The CRT neck wire landings can now be placed in board coordinates and matched to
 | Board pad | Socket wire | Net | Approx board coordinate | Trace status |
 |---|---|---|---|---|
 | `E1` | green | `CRT_E1_GREEN` | `205,1135` | confirmed landing; electrode function pending |
-| `E2` | yellow | `CRT_E2_YELLOW` | `105,1260` | confirmed landing; likely video/cathode path, still pending local confirmation |
+| `E2` | yellow | `CRT_E2_VIDEO_CATHODE` | `105,1260` | confirmed landing; user continuity confirms path to non-J2 side of `NS401` and `R405` |
 | `E3` | brown | `CRT_E3_BROWN` | `245,1395` | confirmed landing; do not merge with aquadag yet |
 | `E6` | red | `CRT_E6_RED` | `235,1020` | confirmed landing; electrode function pending |
 | `E7` | blue | `CRT_E7_BLUE` | `270,910` | confirmed landing; likely focus-style path, still pending local confirmation |
