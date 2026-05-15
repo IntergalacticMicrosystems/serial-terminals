@@ -6,7 +6,7 @@ from compat import open_serial, sleep
 import graphics as gfx
 
 ESC = b"\x1b"
-ROWS = 24
+ROWS = 23
 COLS = 80
 BLOCK = 0x5F  # VT52 graphics-mode full block on the D-175
 
@@ -33,7 +33,7 @@ def parse_args(argv=None):
     import argparse
 
     p = argparse.ArgumentParser(description="Blink D-175 screen between fill and blank")
-    p.add_argument("--port", default="COM7", help="serial port (default: COM7)")
+    p.add_argument("--port", default="COM8", help="serial port (default: COM7)")
     p.add_argument("--baud", type=int, default=19200, help="baud rate (default: 19200)")
     p.add_argument("--xonxoff", default=True, action="store_true")
     p.add_argument("--rtscts", action="store_true")
@@ -53,7 +53,7 @@ def main(argv=None):
     try:
         while True:
             ser.write(fill)
-            sleep(2.0)
+            sleep(4.0)
             ser.write(clear)
             sleep(2.0)
     except KeyboardInterrupt:

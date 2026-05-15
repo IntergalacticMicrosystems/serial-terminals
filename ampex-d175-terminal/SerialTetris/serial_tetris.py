@@ -34,7 +34,7 @@ def parse_args(argv=None):
     p = argparse.ArgumentParser(
         description="SerialTetris — Ampex terminal Tetris server"
     )
-    p.add_argument("--port", default="COM7", help="serial port (default: COM7)")
+    p.add_argument("--port", default="COM8", help="serial port (default: COM7)")
     p.add_argument("--baud", type=int, default=19200, help="baud rate (default: 19200)")
     p.add_argument(
         "--block",
