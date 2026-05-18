@@ -30,9 +30,9 @@ code equals `0x20 + bitmask`, where each bit of the mask toggles one
 pixel:
 
 ```
-  bit 0 (0x01): top-left        bit 1 (0x02): top-right
-  bit 2 (0x04): middle-left     bit 3 (0x08): middle-right
-  bit 4 (0x10): bottom-left     bit 5 (0x20): bottom-right
+  bit 0 (0x01): top-right       bit 1 (0x02): top-left
+  bit 2 (0x04): middle-right    bit 3 (0x08): middle-left
+  bit 4 (0x10): bottom-right    bit 5 (0x20): bottom-left
 ```
 
 All 64 combinations of the six pixels are reachable, giving a complete
@@ -48,8 +48,8 @@ Unicode's).
 | `0x23` | `## / .. / ..` | top-row bar |
 | `0x2C` | `.. / ## / ..` | middle-row bar |
 | `0x50` | `.. / .. / ##` | bottom-row bar |
-| `0x35` | `#. / #. / #.` | full left column |
-| `0x4A` | `.# / .# / .#` | full right column |
+| `0x35` | `.# / .# / .#` | full right column |
+| `0x4A` | `#. / #. / #.` | full left column |
 | `0x2F` | `## / ## / ..` | top two rows filled |
 | `0x5C` | `.. / ## / ##` | bottom two rows filled |
 | `0x5F` | `## / ## / ##` | full solid 2×3 block |
@@ -63,20 +63,20 @@ lines (top-row, middle-row, bottom-row; `#` = pixel on, `.` = off).
 ```
          0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
 
-  2:    ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##
-        ..  ..  ..  ..  #.  #.  #.  #.  .#  .#  .#  .#  ##  ##  ##  ##
+  2:    ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##
+        ..  ..  ..  ..  .#  .#  .#  .#  #.  #.  #.  #.  ##  ##  ##  ##
         ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
 
-  3:    ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##
-        ..  ..  ..  ..  #.  #.  #.  #.  .#  .#  .#  .#  ##  ##  ##  ##
-        #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.
-
-  4:    ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##
-        ..  ..  ..  ..  #.  #.  #.  #.  .#  .#  .#  .#  ##  ##  ##  ##
+  3:    ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##
+        ..  ..  ..  ..  .#  .#  .#  .#  #.  #.  #.  #.  ##  ##  ##  ##
         .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#  .#
 
-  5:    ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##  ..  #.  .#  ##
-        ..  ..  ..  ..  #.  #.  #.  #.  .#  .#  .#  .#  ##  ##  ##  ##
+  4:    ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##
+        ..  ..  ..  ..  .#  .#  .#  .#  #.  #.  #.  #.  ##  ##  ##  ##
+        #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.  #.
+
+  5:    ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##  ..  .#  #.  ##
+        ..  ..  ..  ..  .#  .#  .#  .#  #.  #.  #.  #.  ##  ##  ##  ##
         ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 ```
 
@@ -125,15 +125,15 @@ To pick a block character for an arbitrary 2×3 pixel pattern, sum the
 bit values for the pixels you want lit and add `0x20`:
 
 ```
-         col0        col1
-row0     0x01        0x02
-row1     0x04        0x08
-row2     0x10        0x20
+         left        right
+row0     0x02        0x01
+row1     0x08        0x04
+row2     0x20        0x10
 ```
 
 Examples:
 - All six pixels → `0x01+0x02+0x04+0x08+0x10+0x20 = 0x3F`, so send
   `0x20 + 0x3F = 0x5F` (full block).
-- Just top-left and bottom-right (diagonal) → `0x01+0x20 = 0x21`, so
+- Just top-right and bottom-left (diagonal) → `0x01+0x20 = 0x21`, so
   send `0x20 + 0x21 = 0x41`.
 - Middle-row only → `0x04+0x08 = 0x0C`, so send `0x2C`.

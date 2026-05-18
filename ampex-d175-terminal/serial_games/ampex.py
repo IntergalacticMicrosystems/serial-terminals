@@ -148,10 +148,7 @@ class Renderer:
             self._write(gfx.ENTER_GFX + bytes(buf) + gfx.EXIT_GFX)
 
     def draw_demo_banner(self):
-        self._write(self._goto(0, 5) + b'Press s to end demo')
-
-    def draw_attract_banner(self):
-        self._write(self._goto(0, 5) + b'Press any key for menu')
+        self._write(self._goto(0, 5) + b'Press any key to play')
 
     def pause(self):
         self._write(self._clear() + self._goto(10, 32) + b'P A U S E D')

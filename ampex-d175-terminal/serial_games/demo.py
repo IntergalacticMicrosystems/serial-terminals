@@ -99,21 +99,13 @@ def _next_action(game, target):
     return game.soft_drop()
 
 
-def run_demo(ser, r, keydebug=False, any_key_exits=False):
-    """Auto-play Tetris until the user asks to exit.
-
-    By default, only 's'/'S'/space break out — the same skip keys that
-    the game-over screen advertises. Pass any_key_exits=True for
-    attract-mode use, where the first byte received returns control
-    to the caller (e.g. a startup menu)."""
+def run_demo(ser, r, keydebug=False):
+    """Auto-play Tetris until any byte arrives on the serial port."""
     while True:
         game = Game()
         r.draw_chrome()
         r.full_repaint(game)
-        if any_key_exits:
-            r.draw_attract_banner()
-        else:
-            r.draw_demo_banner()
+        r.draw_demo_banner()
 
         target = _plan(game)
         planned_piece = game.piece
@@ -124,18 +116,12 @@ def run_demo(ser, r, keydebug=False, any_key_exits=False):
 
         while not game.game_over:
             data = ser.read(64)
-            if any_key_exits:
-                if data:
-                    return
-            elif (
-                b"\x53" in data or b"\x73" in data or b"\x20" in data
-            ):  # 'S' or 's' or space to skip demo
-                return
             if data:
                 if keydebug:
                     print(
                         "rx: " + " ".join("{:02X}".format(b) for b in data), flush=True
                     )
+                return
 
             if game.piece is not planned_piece:
                 target = _plan(game)

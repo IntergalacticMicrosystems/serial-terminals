@@ -9,6 +9,9 @@ ESC = b"\x1b"
 ROWS = 23
 COLS = 80
 BLOCK = 0x5F  # VT52 graphics-mode full block on the D-175
+LEFTSIDE = 0x35
+BLANK = 0x00
+RIGHTSIDE = 0x4A
 
 
 def _goto(r, c):
@@ -21,7 +24,7 @@ def _clear():
 
 def _fill():
     buf = bytearray(gfx.ENTER_GFX)
-    row = bytes([BLOCK]) * COLS
+    row = bytes([LEFTSIDE]) * COLS
     for r in range(ROWS):
         buf += _goto(r, 0)
         buf += row
@@ -52,12 +55,14 @@ def main(argv=None):
     clear = _clear()
     try:
         while True:
-            ser.write(fill)
-            sleep(4.0)
+            # ser.write(fill)
+            ser.write(gfx.ENTER_GFX)
+            ser.write(bytes([LEFTSIDE]))
+            ser.write(_goto(1, 0))
+            ser.write(bytes([RIGHTSIDE]))
+            sleep(40.0)
+            # sleep(2.0)
             ser.write(clear)
-            sleep(2.0)
-    except KeyboardInterrupt:
-        ser.write(clear)
     finally:
         ser.close()
 

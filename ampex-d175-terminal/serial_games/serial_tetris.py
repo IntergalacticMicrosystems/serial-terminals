@@ -70,12 +70,6 @@ def decode_key(byte):
     return None
 
 
-def attract_mode(ser, block_on, keydebug=False):
-    """Run Tetris auto-play as attract mode until any byte arrives."""
-    r = Renderer(ser, block_on=block_on)
-    run_demo(ser, r, keydebug=keydebug, any_key_exits=True)
-
-
 def play(ser, block_on, keydebug=False):
     r = Renderer(ser, block_on=block_on)
     run_demo(ser, r, keydebug=keydebug)
