@@ -6,7 +6,7 @@ from compat import open_serial, sleep
 import graphics as gfx
 
 ESC = b"\x1b"
-ROWS = 23
+ROWS = 24
 COLS = 80
 BLOCK = 0x5F  # VT52 graphics-mode full block on the D-175
 LEFTSIDE = 0x35
@@ -24,7 +24,7 @@ def _clear():
 
 def _fill():
     buf = bytearray(gfx.ENTER_GFX)
-    row = bytes([LEFTSIDE]) * COLS
+    row = bytes([BLOCK]) * COLS
     for r in range(ROWS):
         buf += _goto(r, 0)
         buf += row
@@ -36,7 +36,7 @@ def parse_args(argv=None):
     import argparse
 
     p = argparse.ArgumentParser(description="Blink D-175 screen between fill and blank")
-    p.add_argument("--port", default="COM8", help="serial port (default: COM7)")
+    p.add_argument("--port", default="COM20", help="serial port (default: COM7)")
     p.add_argument("--baud", type=int, default=19200, help="baud rate (default: 19200)")
     p.add_argument("--xonxoff", default=True, action="store_true")
     p.add_argument("--rtscts", action="store_true")
@@ -51,16 +51,17 @@ def main(argv=None):
         xonxoff=args.xonxoff,
         rtscts=args.rtscts,
     )
-    fill = _fill()
+    fill = _fill()[:-4]
     clear = _clear()
     try:
+        ser.write(clear)
         while True:
-            # ser.write(fill)
-            ser.write(gfx.ENTER_GFX)
-            ser.write(bytes([LEFTSIDE]))
-            ser.write(_goto(1, 0))
-            ser.write(bytes([RIGHTSIDE]))
-            sleep(40.0)
+            ser.write(fill)
+            # ser.write(gfx.ENTER_GFX)
+            # ser.write(bytes([LEFTSIDE]))
+            # ser.write(_goto(1, 0))
+            # ser.write(bytes([RIGHTSIDE]))
+            sleep(4000.0)
             # sleep(2.0)
             ser.write(clear)
     finally:
